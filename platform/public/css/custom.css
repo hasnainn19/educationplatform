@@ -93,6 +93,10 @@
 	content: url("../images/branch.png");
 }
 
+.mif-update::before {
+	content: url("../images/update.png");
+}
+
 .mif-link::before {
 	content: url("../images/link.png");
 }

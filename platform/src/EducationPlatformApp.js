@@ -175,6 +175,7 @@ class EducationPlatformApp {
     setupAuthenticatedState(urlParameters) {
         document.getElementById('save')?.classList.remove('hidden');
         document.getElementById('branch')?.classList.remove('hidden');
+        document.getElementById('update')?.classList.remove('hidden');
         setAuthenticated(true);
         this.initializeActivity(urlParameters);
     }
@@ -957,6 +958,11 @@ class EducationPlatformApp {
             event.preventDefault();
             this.switchBranch(currentBranch, branchToSwitchTo);
         };
+    }
+
+    pullChanges(event) {
+        event.preventDefault();
+        console.log("Pulling changes from the remote repository...");
     }
 
     /**

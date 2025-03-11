@@ -50,6 +50,10 @@
                         <span class="icon"><span class="mif-example-16 mif-save"></span></span>
                         <span class="caption">Save</span>
                     </a>
+                    <a href="#" onclick="pullChanges(event)" id="update" class="hidden">
+                        <span class="icon"><span class="mif-example-16 mif-update"></span></span>
+                        <span class="caption">Update</span>
+                    </a>
                     <a href="#" onclick="showBranches(event)" id="branch" class="hidden">
                         <span class="icon"><span class="mif-example-16 mif-branch"></span></span>
                         <span class="caption">Branch</span>
@@ -104,7 +108,7 @@
 
         <div class="create-branch-based-on-container">
             <p class="create-branch-based-on">
-                This branch will be based on: 
+                This branch will be based on the currently checked out branch: 
                 <strong id="create-branch-based-on-text">
                     <!-- Render the text dynamically -->
                 </strong>
