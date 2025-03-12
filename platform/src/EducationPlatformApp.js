@@ -318,7 +318,6 @@ class EducationPlatformApp {
         
         // Create panels for the given activities
         for ( let apanel of this.activity.panels ){
-
             var newPanel = this.createPanelForDefinitionId(apanel);
             if (newPanel != null){
                 this.panels.push(newPanel);
@@ -963,6 +962,21 @@ class EducationPlatformApp {
     pullChanges(event) {
         event.preventDefault();
         console.log("Pulling changes from the remote repository...");
+
+        // Find which panels are 'pullable' (i.e. have a file URL)
+        const pullablePanels = this.panels.filter(p => p.getFileUrl() !== null);
+
+        pullablePanels.forEach(panel => {
+            // 1) Fetch the file from the remote repository
+            // 2) Compare the remote SHA with the panel's current SHA. If they differ, remote changes are available
+            // 3) Check for unsaved changes
+            // 4) If there are unsaved changes, show a prompt, potentially tell them to make a new branch
+            // 5) If there are no unsaved changes, proceed with pulling the changes
+            // 6) Update the panel with the new file content and SHA
+            // 7) Mark the editor as clean
+            // 8) Notify the user of the successful pull
+            
+        })
     }
 
     /**
