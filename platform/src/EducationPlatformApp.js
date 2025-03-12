@@ -965,18 +965,49 @@ class EducationPlatformApp {
 
         // Find which panels are 'pullable' (i.e. have a file URL)
         const pullablePanels = this.panels.filter(p => p.getFileUrl() !== null);
+        let updatesMade = false;
 
-        pullablePanels.forEach(panel => {
-            // 1) Fetch the file from the remote repository
-            // 2) Compare the remote SHA with the panel's current SHA. If they differ, remote changes are available
-            // 3) Check for unsaved changes
-            // 4) If there are unsaved changes, show a prompt, potentially tell them to make a new branch
-            // 5) If there are no unsaved changes, proceed with pulling the changes
-            // 6) Update the panel with the new file content and SHA
-            // 7) Mark the editor as clean
-            // 8) Notify the user of the successful pull
-            
+        pullablePanels.forEach(panel => async () => {
+            // Fetch the file from the remote repository
+            const fileUrl = panel.getFileUrl();
+        
+            try {
+                const remoteFile = await this.fileHandler.fetchFile(fileUrl);
+
+                // Compare the remote SHA with the panel's current SHA. If they differ, remote changes are available
+                if (remoteFile.sha !== panel.getValueSha()) {
+                    // Remote changes are available
+                    console.log("Remote changes are available for panel " + panel.getId());
+                    
+                    // Check for unsaved changes
+                    if (panel.canSave()) {
+                        // Show a prompt, telling them to make a new branch
+                        console.log("Unsaved changes in panel " + panel.getId() + " sort this out before pulling")
+                        return;
+                    }
+
+                    // Update the panel with the new file content and SHA
+                    panel.setValue(remoteFile.content);
+                    panel.setValueSha(remoteFile.sha);
+                    updatesMade = true;
+
+                    console.log("Panel " + panel.getId() + " updated successfully.");
+                    panel.getEditor().session.getUndoManager().markClean();
+                }
+            }
+            catch (error) {
+                console.error(error);
+                this.errorHandler.notify("An error occurred while trying to update the panels", error);
+            }      
+
+        // Notify the user of the successful pull, or if no changes were available
         })
+        if (updatesMade) {
+            PlaygroundUtility.successNotification("Panels have been successfully updated.");
+        }
+        else {
+            PlaygroundUtility.warningNotification("The session is already up-to-date.");
+        }
     }
 
     /**
