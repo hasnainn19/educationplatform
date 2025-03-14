@@ -964,15 +964,15 @@ class EducationPlatformApp {
         console.log("Pulling changes from the remote repository...");
 
         // Find which panels are 'pullable' (i.e. have a file URL)
-        const pullablePanels = this.panels.filter(p => p.getFileUrl() !== null);
+        const pullablePanels = this.panels.filter(p => p.getFileUrl());
         let updatesMade = false;
 
-        pullablePanels.forEach(panel => async () => {
-            // Fetch the file from the remote repository
-            const fileUrl = panel.getFileUrl();
-        
+        pullablePanels.forEach(async panel => {
             try {
-                const remoteFile = await this.fileHandler.fetchFile(fileUrl);
+                // Fetch the file from the remote repository
+                const remoteFile = await this.fileHandler.fetchFile(panel.getFileUrl(), utility.urlParamPrivateRepo());
+                console.log("Fetched remote file for panel " + panel.getId());
+                console.log(JSON.parse(remoteFile));
 
                 // Compare the remote SHA with the panel's current SHA. If they differ, remote changes are available
                 if (remoteFile.sha !== panel.getValueSha()) {
@@ -1009,6 +1009,53 @@ class EducationPlatformApp {
             PlaygroundUtility.warningNotification("The session is already up-to-date.");
         }
     }
+
+    pullChanges(event) {
+        event.preventDefault();
+        console.log("Pulling changes from the remote repository...");
+    
+        // Find which panels are 'pullable' (i.e. have a file URL)
+        const pullablePanels = this.panels.filter(p => p.getFileUrl());
+        let updatesMade = false;
+    
+        (async () => {
+            try {
+                for (const panel of pullablePanels) {
+                    // Fetch the file from the remote repository
+                    const remoteFile = await this.fileHandler.fetchFile(panel.getFileUrl(), utility.urlParamPrivateRepo());
+    
+                    // Compare the remote SHA with the panel's current SHA.
+                    if (remoteFile.sha !== panel.getValueSha()) {
+                        console.log("Remote changes are available for panel " + panel.getId());
+    
+                        if (panel.canSave()) {
+                            console.log("Unsaved changes in panel " + panel.getId() + " sort this out before pulling");
+                            return;
+                        }
+    
+                        panel.setValue(remoteFile.content);
+                        panel.setValueSha(remoteFile.sha);
+                        updatesMade = true;
+                        console.log("Panel " + panel.getId() + " updated successfully.");
+                        panel.getEditor().session.getUndoManager().markClean();
+                    }
+                }
+    
+                // Notify the user of the successful pull, or if no changes were available
+                if (updatesMade) {
+                    PlaygroundUtility.successNotification("Panels have been successfully updated.");
+                } 
+                else {
+                    PlaygroundUtility.warningNotification("The session is already up-to-date.");
+                }
+            } 
+            catch (error) {
+                console.error(error);
+                this.errorHandler.notify("An error occurred while trying to update the panels", error);
+            }
+        })();
+    }
+    
 
     /**
      * Poll for editor to become available. 
