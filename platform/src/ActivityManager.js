@@ -37,11 +37,10 @@ class ActivityManager {
         this.activitiesUrl ? this.customActivitiesUrl = true : this.customActivitiesUrl = false;
 
         const parameters = new URLSearchParams(utility.getWindowLocationSearch());
-        const parameterKeys = Array.from(parameters.keys());
 
         // Retrieve selected activity from the url parameters 
-        for (const key of parameterKeys) {
-            if (!parameters.get(key)) {
+        for (const [key, value] of parameters.entries()) {
+            if (value == "") {
                 this.activityId = key;
                 break;
             }
@@ -188,7 +187,13 @@ class ActivityManager {
      * Create the activities menu
      * @param {*} config valid activities configuration object
      */
-    createActivitiesMenu(config){
+    createActivitiesMenu(config) {
+
+        if (!this.activityId) {
+            const firstActivityId = this.findFirstActivityIdFromConfig(config.activities);
+            this.refreshUrlWithActivityId(firstActivityId);
+            return;
+        }
 
         for (const activity of config.activities) {
 
@@ -306,13 +311,35 @@ class ActivityManager {
     }
 
     storeActivity(activity) {
-
-        if (!this.activityId) {
-            this.activityId = activity.id;
-        }
-        
         this.activities[activity.id] = activity;
-    
+    }
+
+    findFirstActivityIdFromConfig(activities) {
+        for (const activity of activities) {
+            if (activity.id) {
+                return activity.id;
+            } 
+            else if (Array.isArray(activity.activities)) {
+                const id = this.findFirstActivityIdFromConfig(activity.activities);
+                if (id) return id;
+            }
+        }
+        return null;
+    }
+
+    refreshUrlWithActivityId(activityId) {
+        const currentURL = new URL(utility.getWindowLocationHref());
+        const currentParams = new URLSearchParams(utility.getWindowLocationSearch());
+
+        const newParams = new URLSearchParams();
+        newParams.set(activityId, "");
+
+        for (const [key, value] of currentParams.entries()) {
+            newParams.append(key, value);
+        }
+
+        const newUrl = `${currentURL.origin}${currentURL.pathname}?${newParams.toString()}`;
+        utility.setWindowLocationHref(newUrl);
     }
 
     getSelectedActivity() {

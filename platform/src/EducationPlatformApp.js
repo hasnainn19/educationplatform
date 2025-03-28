@@ -144,8 +144,6 @@ class EducationPlatformApp {
 
             if (hasAuthCookie.authenticated) {
                 console.log("User has previously logged in - redirecting to activity.");
-
-                PlaygroundUtility.hideLogin();
                 this.setupAuthenticatedState(urlParameters);
             } 
             else {
