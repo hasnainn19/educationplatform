@@ -36,7 +36,7 @@ import { utility } from './Utility.js';
 import { ErrorHandler } from './ErrorHandler.js';
 
 
-const COMMON_UTILITY_URL = utility.getWindowLocationHref().replace( utility.getWindowLocationSearch(), "" ) + "common/utility.json";
+const COMMON_UTILITY_URL = utility.getWindowLocationHref().replace(utility.getWindowLocationSearch(), "") + "common/utility.json";
 const ACTION_FUNCTION_LANGUAGE_TYPE = "text";
 export const DEFAULT_COMMIT_MESSAGE = "MDENet Education Platform save.";
 
@@ -67,7 +67,7 @@ class EducationPlatformApp {
         this.branches = [];
     }
 
-    initialize( urlParameters, tokenHandlerUrl , wsUri){
+    initialize(urlParameters, tokenHandlerUrl, wsUri) {
         this.fileHandler = new FileHandler(tokenHandlerUrl);
         this.wsUri = wsUri;
         utility.setAuthenticated(false);
@@ -75,7 +75,7 @@ class EducationPlatformApp {
         /* 
         *  Setup the browser environment 
         */
-        if (FEEDBACK_SURVEY_URL){
+        if (FEEDBACK_SURVEY_URL) {
             PlaygroundUtility.setFeedbackButtonUrl(FEEDBACK_SURVEY_URL);
             PlaygroundUtility.showFeedbackButton();
         }
@@ -89,18 +89,16 @@ class EducationPlatformApp {
             this.handleInitialLoad(urlParameters, tokenHandlerUrl);
         }
 
-        document.getElementById("btnnologin").onclick = async () => {
-            utility.setAuthenticated(false);
-            PlaygroundUtility.hideLogin();
-
-            // Try to initialise the activity in un-authenticated mode. Might get errors, which we then dutifully report.
-            try {
-                this.initializeActivity(urlParameters);
-            }
-            catch (error) {
-                console.error("Error during activity initialization:", error);
-                return false;
-            }
+        // Hide the "continue without login" button for private repositories
+        if (utility.urlParamPrivateRepo()) {
+            document.getElementById("btnnologin").style.display = "none";
+        }
+        else {
+            // Only set up "continue without login" for public repositories
+            document.getElementById("btnnologin").onclick = async () => {
+                const success = this.setupUnauthenticatedState(urlParameters);
+                success ? PlaygroundUtility.hideLogin() : PlaygroundUtility.showLogin();
+            };
         }
 
         document.getElementById("btnlogin").onclick = async () => {
@@ -108,7 +106,7 @@ class EducationPlatformApp {
             // Get github url
             const urlRequest = { url: utility.getWindowLocationHref() };
             let authServerDetails = await utility.jsonRequest(tokenHandlerUrl + "/mdenet-auth/login/url",
-                                                    JSON.stringify(urlRequest) );
+                JSON.stringify(urlRequest));
 
             authServerDetails = JSON.parse(authServerDetails);
 
@@ -120,7 +118,7 @@ class EducationPlatformApp {
         this.cleanAuthParams(urlParameters);
     }
 
-    async handleAuthRedirect(urlParameters, tokenHandlerUrl) {        
+    async handleAuthRedirect(urlParameters, tokenHandlerUrl) {
         try {
             // Complete authentication
             const tokenRequest = {};
@@ -128,8 +126,8 @@ class EducationPlatformApp {
             tokenRequest.code = urlParameters.get("code");
             //TODO loading box
             await utility.jsonRequest(tokenHandlerUrl + "/mdenet-auth/login/token",
-                JSON.stringify(tokenRequest), true );
-            
+                JSON.stringify(tokenRequest), true);
+
         }
         catch (error) {
             console.error("Error while completing authentication:", error);
@@ -160,13 +158,13 @@ class EducationPlatformApp {
 
             const success = this.setupAuthenticatedState(urlParameters);
             success ? PlaygroundUtility.hideLogin() : PlaygroundUtility.showLogin();
-        } 
+        }
         else {
             console.log("User is not authenticated - showing login.");
             PlaygroundUtility.showLogin();
         }
     }
-    
+
     cleanAuthParams(urlParameters) {
         urlParameters.delete("code");
         urlParameters.delete("state");
@@ -178,7 +176,7 @@ class EducationPlatformApp {
             // For a specific key ('activities' in this case), you add it to the array without encoding
             if (key === 'activities') {
                 params.push(`${key}=${value}`);
-            } 
+            }
             else {
                 // For all other parameters, you still want to encode them
                 params.push(`${key}=${encodeURIComponent(value)}`);
@@ -218,6 +216,21 @@ class EducationPlatformApp {
         return true;
     }
 
+    setupUnauthenticatedState(urlParameters) {
+        try {
+            utility.setAuthenticated(false);
+            this.activityURL = utility.getActivityURL();
+        }
+        catch (error) {
+            console.error(error);
+            return false;
+        }
+
+        this.initializeActivity(urlParameters);
+
+        return true;
+    }
+
     setupEventListeners() {
         // Warn user if there are unsaved changes before closing the tab
         window.addEventListener("beforeunload", (event) => {
@@ -229,7 +242,7 @@ class EducationPlatformApp {
             }
         });
 
-        document.addEventListener("keydown", function(event) {
+        document.addEventListener("keydown", function (event) {
             // Check for Ctrl+S or Command+S (for macOS)
             if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
 
@@ -242,7 +255,7 @@ class EducationPlatformApp {
         });
     }
 
-    initializeActivity(urlParameters){
+    initializeActivity(urlParameters) {
 
         let errors = [];
 
@@ -251,47 +264,47 @@ class EducationPlatformApp {
             errors.push(new EducationPlatformError("No activity configuration has been specified."));
         }
 
-        if (errors.length==0){
+        if (errors.length == 0) {
             // An activity configuration has been provided
             this.toolsManager = new ToolsManager(this.errorHandler.notify.bind(this.errorHandler));
-            this.activityManager = new ActivityManager( (this.toolsManager.getPanelDefinition).bind(this.toolsManager), this.fileHandler );
+            this.activityManager = new ActivityManager((this.toolsManager.getPanelDefinition).bind(this.toolsManager), this.fileHandler);
             this.activityManager.initializeActivities();
             errors = errors.concat(this.activityManager.getConfigErrors());
-        } 
+        }
 
-        if (errors.length==0){
+        if (errors.length == 0) {
             // The activities have been validated
-            this.toolsManager.setToolsUrls( this.activityManager.getToolUrls().add(COMMON_UTILITY_URL) );
+            this.toolsManager.setToolsUrls(this.activityManager.getToolUrls().add(COMMON_UTILITY_URL));
             errors = errors.concat(this.toolsManager.getConfigErrors());
         }
 
-        if (errors.length==0){
+        if (errors.length == 0) {
             // The tools have been validated 
             this.activityManager.showActivitiesNavEntries();
 
             // Import tool grammar highlighting 
-            const  toolImports = this.toolsManager.getToolsGrammarImports(); 
+            const toolImports = this.toolsManager.getToolsGrammarImports();
 
-            for(let ipt of toolImports) {
+            for (let ipt of toolImports) {
                 ace.config.setModuleUrl(ipt.module, ipt.url);
             }
 
             // Add Tool styles for icons 
-           for (let toolUrl of this.toolsManager.toolsUrls){
+            for (let toolUrl of this.toolsManager.toolsUrls) {
                 let toolBaseUrl = toolUrl.url.substring(0, toolUrl.url.lastIndexOf("/"));
                 var link = document.createElement("link");
                 link.setAttribute("rel", 'stylesheet');
                 link.setAttribute("href", toolBaseUrl + "/icons.css");
                 document.head.appendChild(link);
             }
-            
-            this.activity = this.activityManager.getSelectedActivity(); 
+
+            this.activity = this.activityManager.getSelectedActivity();
 
             // Validate the resolved activity
-            errors = errors.concat( ActivityValidator.validate(this.activity, this.toolsManager.tools) );   
+            errors = errors.concat(ActivityValidator.validate(this.activity, this.toolsManager.tools));
         }
 
-        if  (errors.length==0){
+        if (errors.length == 0) {
             // The resolved activity has been validated
             this.initializePanels();
         }
@@ -306,28 +319,28 @@ class EducationPlatformApp {
     displayErrors(errors) {
 
         const contentPanelName = "content-panel";
-    
+
         this.panels.push(new BlankPanel(contentPanelName));
         this.panels[0].setVisible(true);
-    
+
         new Layout().createFromPanels("navview-content", this.panels);
-    
+
         PlaygroundUtility.showMenu();
-    
+
         Metro.init();
         this.fit();
-    
-        var contentPanelDiv = document.getElementById(contentPanelName+"Panel"); // Grab the panel div
+
+        var contentPanelDiv = document.getElementById(contentPanelName + "Panel"); // Grab the panel div
 
         // EP Errors
-        const platformErrors= errors.filter((e)=> e.constructor.name === EducationPlatformError.name);
+        const platformErrors = errors.filter((e) => e.constructor.name === EducationPlatformError.name);
 
-        if (platformErrors.length > 0){
+        if (platformErrors.length > 0) {
             let contentTitle = document.createElement("h2");
             contentTitle.innerText = "Education Platform Errors:";
             contentPanelDiv.append(contentTitle);
 
-            platformErrors.forEach( (err) => {
+            platformErrors.forEach((err) => {
                 let content = document.createElement("p");
                 content.append(document.createTextNode(err.message));
 
@@ -338,9 +351,9 @@ class EducationPlatformApp {
         }
 
         // Config File Errors
-        const configErrors= errors.filter((e)=> e.constructor.name === ConfigValidationError.name);
+        const configErrors = errors.filter((e) => e.constructor.name === ConfigValidationError.name);
 
-        if(configErrors.length > 0){
+        if (configErrors.length > 0) {
             let contentTitle = document.createElement("h2");
             contentTitle.innerText = "Config File Errors:";
             contentPanelDiv.append(contentTitle);
@@ -349,9 +362,9 @@ class EducationPlatformApp {
             contentLabels.innerText = "File | Category | Details | Location";
             contentPanelDiv.append(contentLabels);
 
-            configErrors.forEach( (err) => {
+            configErrors.forEach((err) => {
                 let content = document.createElement("p");
-                let contentText= `${err.fileType} | ${err.category} | ${err.message} | ${err.location}` ;
+                let contentText = `${err.fileType} | ${err.category} | ${err.message} | ${err.location}`;
                 content.append(document.createTextNode(contentText));
 
                 contentPanelDiv.append(content);
@@ -364,9 +377,9 @@ class EducationPlatformApp {
             contentTitle.innerText = "Errors:";
             contentPanelDiv.append(contentTitle);
 
-            otherErrors.forEach( (err) => {
+            otherErrors.forEach((err) => {
                 let content = document.createElement("p");
-                let contentText= `${err.constructor.name}: ${err.message}` ;
+                let contentText = `${err.constructor.name}: ${err.message}`;
                 content.append(document.createTextNode(contentText));
 
                 contentPanelDiv.append(content);
@@ -375,16 +388,16 @@ class EducationPlatformApp {
     }
 
     initializePanels() {
-        
+
         if (this.activity.outputLanguage != null) {
             this.outputLanguage = this.activity.outputLanguage;
         }
-        
+
         // Create panels for the given activities
-        for ( let apanel of this.activity.panels ){
+        for (let apanel of this.activity.panels) {
 
             var newPanel = this.createPanelForDefinitionId(apanel);
-            if (newPanel != null){
+            if (newPanel != null) {
                 this.panels.push(newPanel);
             }
         }
@@ -393,17 +406,17 @@ class EducationPlatformApp {
         new Layout().createFrom2dArray("navview-content", this.panels, this.activity.layout.area);
 
         PlaygroundUtility.showMenu();
-        
-        document.addEventListener('click', function(evt) {
+
+        document.addEventListener('click', function (evt) {
             if (evt.target == document.getElementById("toggleNavViewPane")) {
-                setTimeout(function(){ this.fit(); }, 1000);
+                setTimeout(function () { this.fit(); }, 1000);
             }
         });
 
         Metro.init();
 
         this.activityManager.openActiveActivitiesSubMenu();
-        
+
         this.fit();
     }
 
@@ -414,19 +427,19 @@ class EducationPlatformApp {
      * @param {Object} panel - The activity config panel definition.
      * @return {Panel} the platform Panel
      */
-    createPanelForDefinitionId(panel){
+    createPanelForDefinitionId(panel) {
         const panelDefinition = panel.ref;
         var newPanel = null;
 
         const newPanelId = panel.id;
 
-        if (panelDefinition != null){
+        if (panelDefinition != null) {
 
-            switch(panelDefinition.panelclass) {
+            switch (panelDefinition.panelclass) {
                 case "ProgramPanel": {
-                    newPanel =  new ProgramPanel(newPanelId);
+                    newPanel = new ProgramPanel(newPanelId);
                     newPanel.initialize();
-                    
+
                     // Set from the tool panel definition  
                     newPanel.setEditorMode(panelDefinition.language);
                     newPanel.setType(panelDefinition.language);
@@ -435,18 +448,18 @@ class EducationPlatformApp {
                     break;
                 }
                 case "ConsolePanel": {
-                    newPanel =  new ConsolePanel(newPanelId);
+                    newPanel = new ConsolePanel(newPanelId);
                     newPanel.initialize();
                     break;
                 }
                 case "OutputPanel": {
-                    newPanel =  new OutputPanel(newPanelId, panelDefinition.language, this.outputType, this.outputLanguage);
+                    newPanel = new OutputPanel(newPanelId, panelDefinition.language, this.outputType, this.outputLanguage);
                     newPanel.initialize();
                     break;
                 }
                 case "XtextEditorPanel": {
                     let editorUrl = sessionStorage.getItem(newPanelId);
-                    
+
                     newPanel = new XtextEditorPanel(newPanelId);
                     newPanel.initialize(editorUrl, panel.extension);
                     newPanel.setType(panelDefinition.language);
@@ -458,43 +471,43 @@ class EducationPlatformApp {
 
                     newPanel = new CompositePanel(newPanelId);
                     if (panel.childPanels) {
-                        for (let childPanelConfig of panel.childPanels) {     
+                        for (let childPanelConfig of panel.childPanels) {
                             var childPanel = this.createPanelForDefinitionId(childPanelConfig);
                             newPanel.addPanel(childPanel);
                         }
                     }
                     newPanel.initialize();
-                    
+
                     break;
                 }
                 // TODO create other panel types e.g. models and metamodels so the text is formatted correctly
                 default: {
-                    newPanel = new TestPanel(newPanelId);    
-                }            
+                    newPanel = new TestPanel(newPanelId);
+                }
             }
-        
+
             // Add elements common to all panels
             newPanel.setTitle(panel.name);
 
-            if(panel.icon != null){
+            if (panel.icon != null) {
                 newPanel.setIcon(panel.icon);
             } else {
                 newPanel.setIcon(panelDefinition.icon);
             }
-            
-            if (panel.buttons == null && panelDefinition.buttons != null){
+
+            if (panel.buttons == null && panelDefinition.buttons != null) {
                 // No activity defined buttons
-                newPanel.addButtons( Button.createButtons( panelDefinition.buttons, panel.id));
+                newPanel.addButtons(Button.createButtons(panelDefinition.buttons, panel.id));
 
             } else if (panel.buttons != null) {
                 // The activity has defined the buttons, some may be references to buttons defined in the tool spec
-                let resolvedButtonConfigs = panel.buttons.map(btn =>{    
+                let resolvedButtonConfigs = panel.buttons.map(btn => {
                     let resolvedButton;
 
-                    if (btn.ref){
+                    if (btn.ref) {
                         if (panelDefinition.buttons != null) {
                             // button reference so resolve
-                            resolvedButton = panelDefinition.buttons.find((pdBtn)=> pdBtn.id===btn.ref);
+                            resolvedButton = panelDefinition.buttons.find((pdBtn) => pdBtn.id === btn.ref);
                         }
                     } else {
                         // activity defined button
@@ -503,27 +516,27 @@ class EducationPlatformApp {
                     return resolvedButton;
                 });
                 panel.buttons = resolvedButtonConfigs;
-                newPanel.addButtons( Button.createButtons( resolvedButtonConfigs, panel.id));
+                newPanel.addButtons(Button.createButtons(resolvedButtonConfigs, panel.id));
             }
         }
         return newPanel;
     }
-   
+
     /**
      * Handle the response from the remote tool service
      * 
      * @param {Object} action 
      * @param {Promise} requestPromise
      */
-    handleResponseActionFunction(action, requestPromise){
-        
-        requestPromise.then( (responseText) => {
+    handleResponseActionFunction(action, requestPromise) {
+
+        requestPromise.then((responseText) => {
 
             var response = JSON.parse(responseText);
-            const outputPanel = this.activityManager.findPanel( action.output.id, this.panels);
+            const outputPanel = this.activityManager.findPanel(action.output.id, this.panels);
 
             var outputConsole;
-            if (action.outputConsole != null){
+            if (action.outputConsole != null) {
                 outputConsole = this.activityManager.findPanel(action.outputConsole.id, this.panels);
             } else {
                 outputConsole = outputPanel;
@@ -531,28 +544,28 @@ class EducationPlatformApp {
 
             Metro.notify.killAll();
 
-            if ( Object.prototype.hasOwnProperty.call(response, "error")) {
+            if (Object.prototype.hasOwnProperty.call(response, "error")) {
                 outputConsole.setValue(response.error);
             } else {
 
-                var responseDiagram = Object.keys(response).find( key => key.toLowerCase().includes("diagram") );
+                var responseDiagram = Object.keys(response).find(key => key.toLowerCase().includes("diagram"));
 
                 if (response.output) {
                     // Text
-                    outputConsole.setValue(response.output)  
+                    outputConsole.setValue(response.output)
                 }
-                
+
                 if (response.editorID) {
                     // Language workbench
                     PlaygroundUtility.longNotification("Building editor");
 
                     this.checkEditorReady(response.editorID, response.editorUrl, action.source.editorPanel, action.source.editorActivity, outputConsole);
-                    
+
 
                 } else if (responseDiagram != undefined) {
-                
-                    outputPanel.renderDiagram( response[responseDiagram] );
-                    
+
+                    outputPanel.renderDiagram(response[responseDiagram]);
+
                 } else if (response.generatedFiles) {
                     // Multiple text files
                     outputPanel.setGeneratedFiles(response.generatedFiles);
@@ -560,7 +573,7 @@ class EducationPlatformApp {
                 } else if (response.generatedText) {
                     // Generated file
 
-                    switch (action.outputType){
+                    switch (action.outputType) {
                         case "code":
                             // Text
                             outputPanel.getEditor().setValue(response.generatedText.trim(), 1);
@@ -577,11 +590,11 @@ class EducationPlatformApp {
                                 iframe.style.width = "100%";
                                 document.getElementById(outputPanel.getId() + "Diagram").appendChild(iframe);
                             }
-                            
-                            iframe.srcdoc = response.generatedText;
-                            break; 
 
-                        case "puml": 
+                            iframe.srcdoc = response.generatedText;
+                            break;
+
+                        case "puml":
                         case "dot":
                             // UML or Graph
                             var krokiEndpoint = "";
@@ -604,13 +617,13 @@ class EducationPlatformApp {
                             krokiXhr.send(response.generatedText);
                             break;
 
-                            default:
-                                console.log("Unknown output type: " + action.outputType);
+                        default:
+                            console.log("Unknown output type: " + action.outputType);
                     }
                 }
 
-            } 
-        }).catch( (err) => {
+            }
+        }).catch((err) => {
             this.errorHandler.notify("There was an error translating action function parameter types.", err);
         });
 
@@ -619,7 +632,7 @@ class EducationPlatformApp {
 
     fit() {
         var splitter = document.getElementById(PANEL_HOLDER_ID);
-        if (splitter){
+        if (splitter) {
             splitter.style.minHeight = window.innerHeight + "px";
             splitter.style.maxHeight = window.innerHeight + "px";
         }
@@ -632,32 +645,32 @@ class EducationPlatformApp {
 
         // Get the action
         var action = this.activityManager.getActionForCurrentActivity(source, sourceButton);
-       
-        if (!action){
+
+        if (!action) {
             let err = new EducationPlatformError(`Cannot find action given panel '${source}' and button '${sourceButton}'`);
             this.errorHandler.notify("Failed to invoke action.", err);
 
         } else {
             // Action found so try and invoke
             let buttonConfig;
-            
-            if(action.source.buttons){
+
+            if (action.source.buttons) {
                 //Buttons defined by activity
-                buttonConfig = action.source.buttons.find (btn => btn.id == sourceButton);
+                buttonConfig = action.source.buttons.find(btn => btn.id == sourceButton);
             } else {
                 //Buttons defined by tool
-                buttonConfig = action.source.ref.buttons.find (btn => btn.id == sourceButton);
-            }  
+                buttonConfig = action.source.ref.buttons.find(btn => btn.id == sourceButton);
+            }
 
             // Create map containing panel values
             let parameterMap = new Map();
 
-            for (let paramName of Object.keys(action.parameters)){
+            for (let paramName of Object.keys(action.parameters)) {
 
                 let param = {};
                 const panelId = action.parameters[paramName].id;
-                
-                if (panelId) { 
+
+                if (panelId) {
                     const panel = this.activityManager.findPanel(panelId, this.panels);
                     param.type = panel.getType();
                     param.value = panel.getValue();
@@ -678,15 +691,15 @@ class EducationPlatformApp {
             languageParam.value = action.source.ref.language; // Source panel language
             parameterMap.set("language", languageParam);
 
-                // TODO support output and language 
-                //actionRequestData.outputType = outputType;
-                //actionRequestData.outputLanguage = outputLanguage;
+            // TODO support output and language 
+            //actionRequestData.outputType = outputType;
+            //actionRequestData.outputLanguage = outputLanguage;
 
             // Call backend conversion and service functions
             let actionResultPromise = this.toolsManager.invokeActionFunction(buttonConfig.actionfunction, parameterMap);
 
-            this.handleResponseActionFunction(action , actionResultPromise);
-        
+            this.handleResponseActionFunction(action, actionResultPromise);
+
             PlaygroundUtility.longNotification("Executing program");
         }
     }
@@ -699,7 +712,7 @@ class EducationPlatformApp {
             this.toggle(parentElement.id);
         }
     }
-    
+
 
     toggle(elementId, onEmpty) {
         var element = document.getElementById(elementId);
@@ -723,7 +736,7 @@ class EducationPlatformApp {
 
             var visibleSiblings = Array.prototype.slice.call(gutter.parentNode.children).filter(
                 child => child != gutter && getComputedStyle(child).display != "none");
-            
+
             if (visibleSiblings.length > 1) {
                 var nextVisibleSibling = this.getNextVisibleSibling(gutter);
                 var previousVisibleSibling = this.getPreviousVisibleSibling(gutter);
@@ -806,7 +819,7 @@ class EducationPlatformApp {
 
         this.closeAllModalsExcept("save-confirmation-container");
         this.toggleSaveConfirmationVisibility(true);
-       
+
         const saveConfirmationText = document.getElementById("save-body-text");
         if (this.changesHaveBeenMade()) {
             saveConfirmationText.textContent = "You can review your changes before saving:";
@@ -900,13 +913,13 @@ class EducationPlatformApp {
         }
 
         this.saveFiles(commitMessage)
-        .then(() => {
-            PlaygroundUtility.successNotification("The activity panel contents have been saved.");
-        })
-        .catch(error => {
-            console.error(error);
-            this.errorHandler.notify("An error occurred while trying to save the panel contents.");
-        });
+            .then(() => {
+                PlaygroundUtility.successNotification("The activity panel contents have been saved.");
+            })
+            .catch(error => {
+                console.error(error);
+                this.errorHandler.notify("An error occurred while trying to save the panel contents.");
+            });
     }
 
     /**
@@ -927,32 +940,32 @@ class EducationPlatformApp {
             }
 
             this.fileHandler.storeFiles(this.activityURL, files, commitMessage, overrideBranch)
-            .then(response => {
-                // If the save was to a new branch, skip the panel value updates - this is done in the branch switch
-                if (!overrideBranch) {
-                    // Returns a [ {path, sha} ] list corresponding to each file
-                    let dataReturned = JSON.parse(response);
+                .then(response => {
+                    // If the save was to a new branch, skip the panel value updates - this is done in the branch switch
+                    if (!overrideBranch) {
+                        // Returns a [ {path, sha} ] list corresponding to each file
+                        let dataReturned = JSON.parse(response);
 
-                    for (const panel of panelsToSave) {
-                        const filePath = panel.getFilePath();
+                        for (const panel of panelsToSave) {
+                            const filePath = panel.getFilePath();
 
-                        // Find the updated file that matches the panel's file path
-                        const updatedFile = dataReturned.files.find(file => file.path === filePath);
-                        const newSha = updatedFile.sha;
-                        panel.setValueSha(newSha);
-                        panel.setLastSavedContent(panel.getValue());
+                            // Find the updated file that matches the panel's file path
+                            const updatedFile = dataReturned.files.find(file => file.path === filePath);
+                            const newSha = updatedFile.sha;
+                            panel.setValueSha(newSha);
+                            panel.setLastSavedContent(panel.getValue());
 
-                        // Mark the editor clean if the save completed
-                        panel.getEditor().session.getUndoManager().markClean();
+                            // Mark the editor clean if the save completed
+                            panel.getEditor().session.getUndoManager().markClean();
 
-                        console.log(`The contents of panel '${panel.getTitle()}' were saved successfully.`);
+                            console.log(`The contents of panel '${panel.getTitle()}' were saved successfully.`);
+                        }
                     }
-                }
-                resolve();
-            })
-            .catch(error => {
-                reject(error);
-            });
+                    resolve();
+                })
+                .catch(error => {
+                    reject(error);
+                });
         })
     }
 
@@ -984,7 +997,7 @@ class EducationPlatformApp {
                 "✔ OK to discard changes\n" +
                 "✖ Cancel to keep changes"
             );
-        
+
             if (!confirmDiscard) {
                 return;
             }
@@ -1077,7 +1090,7 @@ class EducationPlatformApp {
             if (change.added) {
                 diffLine.classList.add("diff-added");
                 diffLine.textContent = "+ " + change.added;
-            } 
+            }
             else if (change.removed) {
                 diffLine.classList.add("diff-removed");
                 diffLine.textContent = "- " + change.removed;
@@ -1175,7 +1188,7 @@ class EducationPlatformApp {
                             "✔ OK to switch branches\n" +
                             "✖ Cancel to stay on this branch"
                         );
-                    
+
                         if (!confirmSwitch) {
                             return;
                         }
@@ -1183,7 +1196,7 @@ class EducationPlatformApp {
                             this.discardPanelChanges();
                         }
                     }
-    
+
                     this.switchBranch(branch);
                 });
             }
@@ -1207,20 +1220,20 @@ class EducationPlatformApp {
 
             li.addEventListener("click", async () => {
                 const selected = branchList.dataset.selectedBranch;
-    
+
                 // If clicking the already selected one, unselect it
                 if (selected === branch) {
                     li.classList.remove("selected-branch");
                     delete branchList.dataset.selectedBranch;
 
                     infoText.textContent = "Select a branch to merge into " + this.currentBranch;
-                } 
+                }
                 else {
                     // Remove highlight from all
                     branchList.querySelectorAll("li").forEach(item =>
                         item.classList.remove("selected-branch")
                     );
-    
+
                     // Highlight current
                     li.classList.add("selected-branch");
                     branchList.dataset.selectedBranch = branch;
@@ -1259,7 +1272,7 @@ class EducationPlatformApp {
         const head = comparisonInfo.head?.ref ?? branchCompared;
         const base = comparisonInfo.base?.ref ?? this.currentBranch;
         const status = comparisonInfo.status;
-                
+
         // Default: assume merge is allowed
         mergeButton.disabled = false;
 
@@ -1374,7 +1387,7 @@ class EducationPlatformApp {
                     disableMergeButton(false);
                     return;
                 }
-                
+
                 this.discardPanelChanges();
             }
 
@@ -1489,20 +1502,20 @@ class EducationPlatformApp {
             }
 
             // Check for unsaved changes
-            if(this.changesHaveBeenMade()) {
+            if (this.changesHaveBeenMade()) {
                 this.displayCreateBranchConfirmModal(newBranch);
             }
             else {
                 // No unsaved changes, simply create the branch and switch to it
                 this.fileHandler.createBranch(this.activityURL, newBranch)
-                .then(() => {
-                    PlaygroundUtility.successNotification("Branch " + newBranch + " created successfully");
-                    this.displaySwitchToBranchLink(newBranch);
-                })
-                .catch((error) => {
-                    console.error(error);
-                    this.errorHandler.notify("An error occurred while creating a branch.");
-                });
+                    .then(() => {
+                        PlaygroundUtility.successNotification("Branch " + newBranch + " created successfully");
+                        this.displaySwitchToBranchLink(newBranch);
+                    })
+                    .catch((error) => {
+                        console.error(error);
+                        this.errorHandler.notify("An error occurred while creating a branch.");
+                    });
             }
         };
     }
@@ -1528,41 +1541,41 @@ class EducationPlatformApp {
         const confirmButton = document.getElementById("confirm-bring-changes");
         confirmButton.onclick = () => {
             this.fileHandler.createBranch(this.activityURL, newBranch)
-            .then(() => {
-                // Save the changes to this new branch
-                this.saveFiles("Merge changes from " + this.currentBranch + " to " + newBranch, newBranch)
-                    .then(() => {
-                        PlaygroundUtility.successNotification("Branch " + newBranch + " created successfully");
-                        this.displaySwitchToBranchLink(newBranch);
+                .then(() => {
+                    // Save the changes to this new branch
+                    this.saveFiles("Merge changes from " + this.currentBranch + " to " + newBranch, newBranch)
+                        .then(() => {
+                            PlaygroundUtility.successNotification("Branch " + newBranch + " created successfully");
+                            this.displaySwitchToBranchLink(newBranch);
 
-                        // Undo the changes made to the panels to keep the current branch clean
-                        this.discardPanelChanges();
-                    })
-                    .catch((error) => {
-                        console.error(error);
-                        this.errorHandler.notify("An error occured while trying to bring the changes over to the new branch");
-                    });
-            })
-            .catch((error) => {
-                console.error(error);
-                this.errorHandler.notify("An error occurred while creating a branch.");
-            });
+                            // Undo the changes made to the panels to keep the current branch clean
+                            this.discardPanelChanges();
+                        })
+                        .catch((error) => {
+                            console.error(error);
+                            this.errorHandler.notify("An error occured while trying to bring the changes over to the new branch");
+                        });
+                })
+                .catch((error) => {
+                    console.error(error);
+                    this.errorHandler.notify("An error occurred while creating a branch.");
+                });
         };
 
         const discardButton = document.getElementById("discard-changes");
         discardButton.onclick = () => {
             this.fileHandler.createBranch(this.activityURL, newBranch)
-            .then(() => {
-                // Undo the changes made to the panels to keep the current branch clean
-                this.discardPanelChanges();
+                .then(() => {
+                    // Undo the changes made to the panels to keep the current branch clean
+                    this.discardPanelChanges();
 
-                PlaygroundUtility.successNotification("Branch " + newBranch + " created successfully");
-                this.displaySwitchToBranchLink(newBranch);
-            })
-            .catch((error) => {
-                console.error(error);
-                this.errorHandler.notify("An error occurred while creating a branch.");
-            });
+                    PlaygroundUtility.successNotification("Branch " + newBranch + " created successfully");
+                    this.displaySwitchToBranchLink(newBranch);
+                })
+                .catch((error) => {
+                    console.error(error);
+                    this.errorHandler.notify("An error occurred while creating a branch.");
+                });
         }
     }
 
@@ -1666,7 +1679,7 @@ class EducationPlatformApp {
     toggleReviewChangesLink(visibility) {
         const link = document.getElementById("review-changes-link");
         visibility ? link.style.display = "block" : link.style.display = "none";
-    
+
         if (visibility) {
             document.getElementById("review-changes-anchor").onclick = (event) => {
                 event.preventDefault();
@@ -1713,42 +1726,42 @@ class EducationPlatformApp {
      * @param {String} editorActivityId - TODO remove as this can be found using editorPanelId to save having to specify in config.
      * @param {Panel} logPanel - the panel to log progress to.
      */
-    checkEditorReady(editorID, editorInstanceUrl, editorPanelId, editorActivityId, logPanel){
+    checkEditorReady(editorID, editorInstanceUrl, editorPanelId, editorActivityId, logPanel) {
         var socket = new WebSocket(this.wsUri);
         var editorReady = false;
-        socket.onopen = function(){
+        socket.onopen = function () {
             socket.send(editorID);
         };
 
-        socket.onmessage = function(e){
+        socket.onmessage = function (e) {
             var resultData = JSON.parse(e.data);
-            if (resultData.output){
+            if (resultData.output) {
                 logPanel.setValue(resultData.output);
             }
-            if(resultData.editorReady){
+            if (resultData.editorReady) {
                 editorReady = true;
                 socket.close();
-                sessionStorage.setItem( editorPanelId , editorInstanceUrl );
+                sessionStorage.setItem(editorPanelId, editorInstanceUrl);
                 this.activityManager.setActivityVisibility(editorActivityId, true);
                 Metro.notify.killAll();
                 PlaygroundUtility.successNotification("Building complete.");
             }
         }.bind(this);
 
-        socket.onclose = function(){
+        socket.onclose = function () {
             //If editor is not deployed, a new connection must be established.
-            if (!editorReady){
-                if(!socket || socket.readyState == 3){
+            if (!editorReady) {
+                if (!socket || socket.readyState == 3) {
                     this.checkEditorReady(editorID, editorInstanceUrl, editorPanelId, editorActivityId, logPanel);
                 }
             }
         }.bind(this);
 
-            
-        if(!socket || socket.readyState == 3){
+
+        if (!socket || socket.readyState == 3) {
             this.checkEditorReady(editorID, editorInstanceUrl, editorPanelId, editorActivityId, logPanel);
         }
     }
 }
 
-export {EducationPlatformApp}
+export { EducationPlatformApp }
