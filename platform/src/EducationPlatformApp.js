@@ -155,8 +155,8 @@ class EducationPlatformApp {
         if (hasAuthCookie.authenticated) {
             console.log("User has previously logged in - redirecting to activity.");
 
-            const success = this.setupAuthenticatedState(urlParameters);
-            success ? PlaygroundUtility.hideLogin() : PlaygroundUtility.showLogin();
+            this.setupAuthenticatedState(urlParameters);
+            PlaygroundUtility.hideLogin();
         }
         else {
             console.log("User is not authenticated - showing login.");
