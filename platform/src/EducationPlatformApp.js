@@ -96,8 +96,8 @@ class EducationPlatformApp {
         else {
             // Only set up "continue without login" for public repositories
             document.getElementById("btnnologin").onclick = async () => {
-                const success = this.setupUnauthenticatedState(urlParameters);
-                success ? PlaygroundUtility.hideLogin() : PlaygroundUtility.showLogin();
+                this.setupUnauthenticatedState(urlParameters);
+                PlaygroundUtility.hideLogin();
             };
         }
 
@@ -135,9 +135,8 @@ class EducationPlatformApp {
             return;
         }
 
-        const success = this.setupAuthenticatedState(urlParameters);
-        // TODO: Not sure we need this. Should we just hide the login regardless?
-        success ? PlaygroundUtility.hideLogin() : PlaygroundUtility.showLogin();
+        this.setupAuthenticatedState(urlParameters);
+        PlaygroundUtility.hideLogin();
     }
 
     async handleInitialLoad(urlParameters, tokenHandlerUrl) {
