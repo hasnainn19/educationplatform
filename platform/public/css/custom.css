@@ -97,6 +97,10 @@
 	content: url("../images/review.png");
 }
 
+.mif-account::before {
+    content: url("../images/account.png");
+}
+
 .mif-link::before {
 	content: url("../images/link.png");
 }

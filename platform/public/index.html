@@ -62,6 +62,10 @@
                         <span class="icon"><span class="mif-example-16 mif-info"></span></span>
                         <span class="caption">About</span>
                     </a>
+                    <a href="#" onclick="showAccountModal(event)" id="account">
+                        <span class="icon"><span class="mif-example-16 mif-account"></span></span>
+                        <span class="caption">Account</span>
+                    </a>
                 </li>
             </ul>
         </div>
@@ -308,6 +312,22 @@
         </div>
 
     </div>
+
+
+    <div id="account-modal-container" class="container-modal" style="display:none;">
+
+      <div class="container-header">
+          <h6 class="container-title">Account Info</h6>
+          <button class="close-button" id="account-modal-close-button">
+              <span class="default-icon-cross"></span>
+          </button>
+      </div>
+
+      <div class="container-body">
+		  <!-- Render the account info dynamically -->
+      </div>
+
+  </div>
     
     
 

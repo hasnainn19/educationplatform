@@ -1579,6 +1579,23 @@ class EducationPlatformApp {
         }
     }
 
+    showAccountModal(event) {
+        event.preventDefault();
+
+        if (this.modalIsVisible("account-modal-container")) {
+            this.toggleAccountModalVisibility(false);
+            return;
+        }
+
+        this.closeAllModalsExcept("account-modal-container");
+        this.toggleAccountModalVisibility(true);
+
+        const closeButton = document.getElementById("account-modal-close-button");
+        closeButton.onclick = () => {
+            this.toggleAccountModalVisibility(false);
+        };
+    }
+
     /**
      * Hide all modals except the one with the given ID
      * @param {String} exceptionModalId - The HTML id of the modal to keep open
@@ -1606,6 +1623,11 @@ class EducationPlatformApp {
 
     discardPanelChanges() {
         this.saveablePanels.forEach(panel => panel.resetChanges());
+    }
+
+    toggleAccountModalVisibility(visibility) {
+        const container = document.getElementById("account-modal-container");
+        visibility ? container.style.display = "block" : container.style.display = "none";
     }
 
     async toggleSwitchBranchVisibility(visibility) {
