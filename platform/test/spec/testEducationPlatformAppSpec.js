@@ -288,6 +288,7 @@ describe("EducationPlatformApp", () => {
 
             document.body.append(saveButton, branchButton, reviewButton);
 
+            spyOn(console, "error");
             spyOn(platform, "initializeActivity");
             spyOn(platform, "setupEventListeners");
             spyOn(utility, "setAuthenticated");
@@ -300,8 +301,7 @@ describe("EducationPlatformApp", () => {
         });
 
         it("initializes activity and sets up UI for authenticated user", () => {
-            const result = platform.setupAuthenticatedState(new URLSearchParams());
-            expect(platform.initializeActivity).toHaveBeenCalled();
+            platform.setupAuthenticatedState(new URLSearchParams());
 
             expect(utility.setAuthenticated).toHaveBeenCalledWith(true);
             expect(platform.setupEventListeners).toHaveBeenCalled();
@@ -313,15 +313,16 @@ describe("EducationPlatformApp", () => {
             expect(platform.activityURL).toBe("https://activity.example.com");
             expect(platform.currentBranch).toBe("main");
 
-            expect(result).toBeTrue();
+            expect(console.error).not.toHaveBeenCalled();
+
+            expect(platform.initializeActivity).toHaveBeenCalled();
         });
 
-        it("returns false if setupEventListeners throws", () => {
+        it("catches and logs errors gracefully", () => {
             platform.setupEventListeners.and.throwError("event error");
+            platform.setupAuthenticatedState(new URLSearchParams());
 
-            const result = platform.setupAuthenticatedState(new URLSearchParams());
-
-            expect(result).toBeFalse();
+            expect(console.error).toHaveBeenCalledWith(jasmine.any(Error));
         });
     });
 

@@ -191,7 +191,6 @@ class EducationPlatformApp {
     /**
      * Set up the environment for an authenticated user
      * @param {URLSearchParams} urlParameters - The URL parameters.
-     * @returns {boolean} true if the authenticated state was set up successfully, false otherwise.
      */
     setupAuthenticatedState(urlParameters) {
         try {
@@ -207,12 +206,9 @@ class EducationPlatformApp {
         }
         catch (error) {
             console.error(error);
-            return false;
         }
 
         this.initializeActivity(urlParameters);
-
-        return true;
     }
 
     setupUnauthenticatedState(urlParameters) {
@@ -222,12 +218,9 @@ class EducationPlatformApp {
         }
         catch (error) {
             console.error(error);
-            return false;
         }
 
         this.initializeActivity(urlParameters);
-
-        return true;
     }
 
     setupEventListeners() {
