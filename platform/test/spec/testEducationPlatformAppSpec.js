@@ -184,7 +184,8 @@ describe("EducationPlatformApp", () => {
             spyOn(PlaygroundUtility, "showLogin");
             spyOn(console, "log");
             spyOn(console, "error");
-            spyOn(platform, "setupAuthenticatedState").and.returnValue(true);
+            spyOn(platform, "setupAuthenticatedState");
+            spyOn(platform, "setupUnauthenticatedState");
         });
 
         it("calls setupAuthenticatedState if auth cookie is valid", async () => {
@@ -195,7 +196,8 @@ describe("EducationPlatformApp", () => {
             expect(PlaygroundUtility.hideLogin).toHaveBeenCalled();
         });
 
-        it("shows login if authenticated is false", async () => {
+        it("shows login if authenticated is false and repo is private", async () => {
+            spyOn(utility, "urlParamPrivateRepo").and.returnValue(true); // force private repo
             utility.getRequest.and.resolveTo(JSON.stringify({ authenticated: false }));
 
             await platform.handleInitialLoad(urlParams, tokenHandlerUrl);
@@ -212,14 +214,37 @@ describe("EducationPlatformApp", () => {
             expect(PlaygroundUtility.hideLogin).toHaveBeenCalled();
         });
 
-        it("shows login if the request throws an error", async () => {
+        it("loads unauthenticated state and hides login for public repos", async () => {
+            utility.getRequest.and.resolveTo(JSON.stringify({ authenticated: false }));
+            spyOn(utility, "urlParamPrivateRepo").and.returnValue(false);
+
+            await platform.handleInitialLoad(tokenHandlerUrl, urlParams);
+
+            expect(platform.setupUnauthenticatedState).toHaveBeenCalled();
+            expect(PlaygroundUtility.hideLogin).toHaveBeenCalled();
+        });
+
+        it("shows login on private repos if the auth cookie request throws an error", async () => {
             utility.getRequest.and.rejectWith(new Error("network"));
+            spyOn(utility, "urlParamPrivateRepo").and.returnValue(true);
 
             await platform.handleInitialLoad(urlParams, tokenHandlerUrl);
 
             expect(console.error).toHaveBeenCalledWith("Error while checking authentication cookie:", jasmine.any(Error));
             expect(PlaygroundUtility.showLogin).toHaveBeenCalled();
         });
+
+        it("loads unauthenticated state on public repos even if the auth cookie request throws an error", async () => {
+            utility.getRequest.and.rejectWith(new Error("network"));
+            spyOn(utility, "urlParamPrivateRepo").and.returnValue(false);
+
+            await platform.handleInitialLoad(urlParams, tokenHandlerUrl);
+
+            expect(console.error).toHaveBeenCalledWith("Error while checking authentication cookie:", jasmine.any(Error));
+            expect(platform.setupUnauthenticatedState).toHaveBeenCalled();
+            expect(PlaygroundUtility.hideLogin).toHaveBeenCalled();
+        });
+
     });
 
     describe("handleAuthRedirect()", () => {

@@ -159,8 +159,16 @@ class EducationPlatformApp {
             PlaygroundUtility.hideLogin();
         }
         else {
-            console.log("User is not authenticated - showing login.");
-            PlaygroundUtility.showLogin();
+            // If it's a private repo - User MUST log in
+            if (utility.urlParamPrivateRepo()) {
+               console.log("User is not authenticated - showing login.");
+                PlaygroundUtility.showLogin();
+                return;
+            }
+
+            // Public repo - skip login modal
+            this.setupUnauthenticatedState(urlParameters);
+            PlaygroundUtility.hideLogin();
         }
     }
 
