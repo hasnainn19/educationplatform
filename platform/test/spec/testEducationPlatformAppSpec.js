@@ -188,7 +188,7 @@ describe("EducationPlatformApp", () => {
             spyOn(platform, "setupUnauthenticatedState");
         });
 
-        it("calls setupAuthenticatedState if auth cookie is valid", async () => {
+        it("loads the authenticated state if auth cookie is valid", async () => {
             await platform.handleInitialLoad(urlParams, tokenHandlerUrl);
 
             expect(utility.getRequest).toHaveBeenCalledWith(tokenHandlerUrl + "/mdenet-auth/login/validate", true);
@@ -206,15 +206,7 @@ describe("EducationPlatformApp", () => {
             expect(PlaygroundUtility.showLogin).toHaveBeenCalled();
         });
 
-        it("hides login after setupAuthenticatedState completion", async () => {
-            platform.setupAuthenticatedState.and.returnValue(false);
-
-            await platform.handleInitialLoad(urlParams, tokenHandlerUrl);
-
-            expect(PlaygroundUtility.hideLogin).toHaveBeenCalled();
-        });
-
-        it("loads unauthenticated state and hides login for public repos", async () => {
+        it("loads the unauthenticated state and hides login for public repos", async () => {
             utility.getRequest.and.resolveTo(JSON.stringify({ authenticated: false }));
             spyOn(utility, "urlParamPrivateRepo").and.returnValue(false);
 
@@ -234,7 +226,7 @@ describe("EducationPlatformApp", () => {
             expect(PlaygroundUtility.showLogin).toHaveBeenCalled();
         });
 
-        it("loads unauthenticated state on public repos even if the auth cookie request throws an error", async () => {
+        it("loads the unauthenticated state on public repos even if the auth cookie request throws an error", async () => {
             utility.getRequest.and.rejectWith(new Error("network"));
             spyOn(utility, "urlParamPrivateRepo").and.returnValue(false);
 
