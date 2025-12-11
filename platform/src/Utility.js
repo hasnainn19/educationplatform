@@ -148,19 +148,43 @@ export function getActivityURL(location = window.location) {
 }
 
 /**
- * Currently only supports GitHub URLs.
- * Get the current branch from the URL 
- * @returns {String} the branch name, or null if not found
+ * Extracts the Git branch name from a GitHub raw content URL.
+ *
+ * GitHub currently supports two raw URL formats:
+ *
+ * 1. Legacy format:
+ *    https://raw.githubusercontent.com/<owner>/<repo>/<branch>/<path>
+ *    Example:
+ *    https://raw.githubusercontent.com/user/repo/main/file.json
+ *
+ * 2. New "namespaced refs" format:
+ *    https://raw.githubusercontent.com/<owner>/<repo>/refs/heads/<branch>/<path>
+ *    Example:
+ *    https://raw.githubusercontent.com/org/repo/refs/heads/feature-branch/file.json
+ *
+ * This function detects which pattern is present and returns the correct branch name.
+ *
+ * @returns {String|null} The branch name, or null if the URL does not match a supported pattern.
  */
 export function getCurrentBranch() {
     const url = new URL(this.getActivityURL());
-    const pathParts = url.pathname.split('/').filter(Boolean);
-    // pathParts[0] => owner
-    // pathParts[1] => repo
-    // pathParts[2] => branch
-    // pathParts[3] => rest
-    return pathParts[2] || null;
+    const parts = url.pathname.split('/').filter(Boolean);
+
+    // Pattern 1: /owner/repo/branch/...
+    if (parts.length >= 3 && parts[2] !== "refs") {
+        return parts[2];
+    }
+
+    // Pattern 2: /owner/repo/refs/heads/<branch>/...
+    const refsIndex = parts.indexOf("refs");
+    if (refsIndex !== -1 && parts[refsIndex + 1] === "heads") {
+        return parts[refsIndex + 2] || null;
+    }
+
+    return null;
 }
+
+
 
 /**
      * Validates a branch name:
