@@ -168,20 +168,15 @@ export function getActivityURL(location = window.location) {
  */
 export function getCurrentBranch() {
     const url = new URL(this.getActivityURL());
-    const parts = url.pathname.split('/').filter(Boolean);
+    const segments = url.pathname.split('/').filter(Boolean);
 
-    // Pattern 1: /owner/repo/branch/...
-    if (parts.length >= 3 && parts[2] !== "refs") {
-        return parts[2];
+    // New format: /owner/repo/refs/heads/<branch>/<path...>
+    if (segments[2] === "refs" && segments[3] === "heads") {
+        return segments[4] || null;
     }
 
-    // Pattern 2: /owner/repo/refs/heads/<branch>/...
-    const refsIndex = parts.indexOf("refs");
-    if (refsIndex !== -1 && parts[refsIndex + 1] === "heads") {
-        return parts[refsIndex + 2] || null;
-    }
-
-    return null;
+    // Old format: /owner/repo/<branch>/<path...>
+    return segments[2] || null;
 }
 
 

@@ -15,19 +15,36 @@ export class BaseVcsProvider {
     }
 
     /**
-     * Default implementation: splits the URL path into {owner, repo, ref, path}
+     * Parses a GitHub raw file URL into { owner, repo, ref, path }.
+     * Supports both legacy and `refs/heads/<branch>` formats.
      */
     parseFileUrl(fileUrl) {
         const url = new URL(fileUrl);
         const segments = url.pathname.split('/').filter(Boolean);
-        // Assumes the default format: [owner, repo, ref, ...filePath]
+
+        const owner = segments[0];
+        const repo = segments[1];
+
+        // New format: /owner/repo/refs/heads/<branch>/<path...>
+        if (segments[2] === "refs" && segments[3] === "heads") {
+            return {
+                owner,
+                repo,
+                ref: segments[4],               // actual branch
+                path: segments.slice(5).join('/') // rest of the file path
+            };
+        }
+
+        // Old format: /owner/repo/<branch>/<path...>
         return {
-            owner: segments[0],
-            repo: segments[1],
-            ref: segments[2],
+            owner,
+            repo,
+            ref: segments[2] || null,
             path: segments.slice(3).join('/')
         };
     }
+
+
 
     /**
      * Construct a complete request URL from a route.
