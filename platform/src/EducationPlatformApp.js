@@ -1615,7 +1615,7 @@ class EducationPlatformApp {
         else {
             containerBody.innerHTML = `
               <p><strong>Status:</strong> Not signed in</p>
-              <p>Sign in to save changes, create branches, and access private repositories.</p>
+              <p>Sign in to save your work and manage branches</p>
               <div style="margin-top: 1rem; text-align: center;">
                   <button class="button primary round-button" onclick="signInFromModal()">Sign In</button>
               </div>
