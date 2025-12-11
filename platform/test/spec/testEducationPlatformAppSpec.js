@@ -308,6 +308,7 @@ describe("EducationPlatformApp", () => {
             spyOn(console, "error");
             spyOn(platform, "initializeActivity");
             spyOn(platform, "setupEventListeners");
+            spyOn(platform, "fetchAndStoreUserInfo").and.resolveTo();
             spyOn(utility, "setAuthenticated");
             spyOn(utility, "getActivityURL").and.returnValue("https://activity.example.com");
             spyOn(utility, "getCurrentBranch").and.returnValue("main");
@@ -332,6 +333,7 @@ describe("EducationPlatformApp", () => {
 
             expect(console.error).not.toHaveBeenCalled();
 
+            expect(platform.fetchAndStoreUserInfo).toHaveBeenCalled()
             expect(platform.initializeActivity).toHaveBeenCalled();
         });
 
