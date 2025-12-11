@@ -1594,6 +1594,52 @@ class EducationPlatformApp {
         closeButton.onclick = () => {
             this.toggleAccountModalVisibility(false);
         };
+
+        // Dynamically populate the modal content with account information
+        this.populateAccountModalContent();
+    }
+
+    populateAccountModalContent() {
+        const containerBody = document.querySelector("#account-modal-container .container-body");
+
+        if (utility.isAuthenticated()) {
+            // Authenticated user content
+            containerBody.innerHTML = `
+              <p><strong>Status:</strong> Signed in</p>
+              <p><strong>Repository:</strong> ${this.activityURL ? 'Connected' : 'Not connected'}</p>
+              <div style="margin-top: 1rem; text-align: center;">
+                  <button class="button secondary round-button" onclick="signOut()">Sign Out</button>
+              </div>
+          `;
+        }
+        else {
+            containerBody.innerHTML = `
+              <p><strong>Status:</strong> Not signed in</p>
+              <p>Sign in to save changes, create branches, and access private repositories.</p>
+              <div style="margin-top: 1rem; text-align: center;">
+                  <button class="button primary round-button" onclick="signInFromModal()">Sign In</button>
+              </div>
+          `;
+        }
+    }
+
+    async signOut() {
+        try {
+            // Call backend logout endpoint to clear auth cookies
+            await utility.jsonRequest(this.fileHandler.tokenHandlerUrl + "/mdenet-auth/login/logout", "{}", true);
+
+            utility.setAuthenticated(false);
+            window.location.reload();
+        }
+        catch (error) {
+            console.error("Error during sign out:", error);
+        }
+    }
+
+    signInFromModal() {
+        // Close modal and trigger the existing login flow
+        this.toggleAccountModalVisibility(false);
+        document.getElementById("btnlogin").click();
     }
 
     /**

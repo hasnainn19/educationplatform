@@ -61,6 +61,31 @@ class LoginController {
         }
     } 
 
+    logout = async (req, res, next) => {
+        try {
+            let cookies = [];
+
+            // Create an expired cookie to clear the auth cookie
+            const expiredCookieOptions = {
+                ...config.cookieOptions,
+                expires: new Date(0) // Set to epoch time (Jan 1, 1970) to expire immediately
+            };
+
+            cookies.push(getEncryptedCookie(
+                expiredCookieOptions, 
+                '', // Empty token value
+                getAuthCookieName, 
+                config.encKey
+            ));
+
+            res.set('Set-Cookie', cookies);
+            res.status(200).json({ isLoggedOut: true });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+
     validateAuthCookie = async (req, res, next) => {
         try {
             const goodResponse = { authenticated: true };
@@ -104,6 +129,8 @@ class LoginController {
             throw new InvalidRequestException();
         }
     }
+
+
 
 }
 

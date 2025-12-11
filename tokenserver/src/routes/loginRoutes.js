@@ -11,6 +11,7 @@ router.use(attachOctokit);
 
 router.post("/url", asyncCatch(controller.getAuthUrl));
 router.post("/token", asyncCatch(controller.createToken));
+router.post("/logout", asyncCatch(controller.logout));
 router.get("/validate", asyncCatch(controller.validateAuthCookie));
 
 export default router;
