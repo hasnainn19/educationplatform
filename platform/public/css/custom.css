@@ -101,6 +101,10 @@
     content: url("../images/account.png");
 }
 
+.mif-user-placeholder::before {
+    content: url("../images/user-placeholder.png");
+}
+
 .mif-link::before {
 	content: url("../images/link.png");
 }

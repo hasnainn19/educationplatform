@@ -211,6 +211,8 @@ class EducationPlatformApp {
 
             this.activityURL = utility.getActivityURL();
             this.currentBranch = utility.getCurrentBranch();
+
+            this.fetchAndStoreUserInfo();
         }
         catch (error) {
             console.error(error);
@@ -1600,27 +1602,36 @@ class EducationPlatformApp {
     }
 
     populateAccountModalContent() {
+        const userInfo = JSON.parse(sessionStorage.getItem("userInfo")) || {};
+        const isAuthenticated = utility.isAuthenticated();
+        
+        const username = isAuthenticated ? userInfo.login : 'Guest';
+        const status = isAuthenticated ? 'Signed in' : 'Not signed in';
+        const description = isAuthenticated 
+            ? ''
+            : 'Sign in to save your work and manage branches';
+        
+        const buttonText = isAuthenticated ? 'Sign Out' : 'Sign In';
+        const buttonClass = isAuthenticated ? 'secondary' : 'primary';
+        const buttonAction = isAuthenticated ? 'signOut()' : 'signInFromModal()';
+        
+        // Avatar - either GitHub URL or local placeholder icon
+        const avatarHtml = isAuthenticated && userInfo.avatar_url
+            ? `<img src="${userInfo.avatar_url}" alt="Avatar" style="width: 48px; height: 48px; border-radius: 50%; margin-bottom: 0.5rem;">`
+            : `<span class="mif-user-placeholder" style="display: block; margin-bottom: 0.5rem;"></span>`;
+        
         const containerBody = document.querySelector("#account-modal-container .container-body");
-
-        if (utility.isAuthenticated()) {
-            // Authenticated user content
-            containerBody.innerHTML = `
-              <p><strong>Status:</strong> Signed in</p>
-              <p><strong>Repository:</strong> ${this.activityURL ? 'Connected' : 'Not connected'}</p>
-              <div style="margin-top: 1rem; text-align: center;">
-                  <button class="button secondary round-button" onclick="signOut()">Sign Out</button>
-              </div>
-          `;
-        }
-        else {
-            containerBody.innerHTML = `
-              <p><strong>Status:</strong> Not signed in</p>
-              <p>Sign in to save your work and manage branches</p>
-              <div style="margin-top: 1rem; text-align: center;">
-                  <button class="button primary round-button" onclick="signInFromModal()">Sign In</button>
-              </div>
-          `;
-        }
+        containerBody.innerHTML = `
+            <div style="text-align: center; margin-bottom: 1rem;">
+                ${avatarHtml}
+                <p><strong>User:</strong> ${username}</p>
+            </div>
+            <p><strong>Status:</strong> ${status}</p>
+            <p>${description}</p>
+            <div style="margin-top: 1rem; text-align: center;">
+                <button class="button ${buttonClass} round-button" onclick="${buttonAction}">${buttonText}</button>
+            </div>
+        `;
     }
 
     async signOut() {
@@ -1640,6 +1651,22 @@ class EducationPlatformApp {
         // Close modal and trigger the existing login flow
         this.toggleAccountModalVisibility(false);
         document.getElementById("btnlogin").click();
+    }
+
+    /**
+     * Fetches user information from the authentication service and stores it in session storage.
+     */
+    async fetchAndStoreUserInfo() {
+        try {
+            const response = await utility.getRequest(this.fileHandler.tokenHandlerUrl + "/mdenet-auth/login/user", true);
+            const userInfo = JSON.parse(response);
+
+            // Store user info in session storage for easy access
+            sessionStorage.setItem("userInfo", JSON.stringify(userInfo));
+        }
+        catch (error) {
+            console.error("Error fetching user info:", error);
+        }
     }
 
     /**

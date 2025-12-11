@@ -86,6 +86,22 @@ class LoginController {
         }
     }
 
+    getUserInfo = async (req, res, next) => {
+        try {
+            const octokit = req.octokit;
+            const { data } = await octokit.request('GET /user');
+
+            // We get lots of data about the user, but we only return what we need to show
+            res.status(200).json({
+                login: data.login,
+                avatar_url: data.avatar_url,
+            })
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+
     validateAuthCookie = async (req, res, next) => {
         try {
             const goodResponse = { authenticated: true };
