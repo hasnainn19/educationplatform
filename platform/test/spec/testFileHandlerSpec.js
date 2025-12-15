@@ -10,6 +10,17 @@ function createDummyProvider(tokenHandlerUrl) {
         tokenHandlerUrl,
         supportedHosts: ["dummy.com"],
 
+        parseFileUrl: jasmine.createSpy().and.callFake((fileUrl) => {
+            // Simple mock: parse dummy URL format
+            const parts = fileUrl.split('/').filter(Boolean);
+            return {
+                owner: parts[1] || "dummy",
+                repo: parts[2] || "dummy", 
+                ref: parts[3] || "main",
+                path: parts.slice(4).join('/')
+            };
+        }),
+
         createBranchRequest: jasmine.createSpy().and.callFake((url, newBranch) => {
             const requestUrl = new URL(`${tokenHandlerUrl}/${name}/create-branch`);
             return {
@@ -65,7 +76,7 @@ function createDummyProvider(tokenHandlerUrl) {
             // Simple mock: extract everything after the last '/'
             const parts = rawUrl.split('/');
             return parts.slice(4).join('/'); // dummy implementation for testing
-        })
+        }),
     };
 }
 

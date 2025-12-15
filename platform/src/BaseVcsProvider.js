@@ -14,35 +14,6 @@ export class BaseVcsProvider {
         this.tokenHandlerUrl = tokenHandlerUrl;
     }
 
-    /**
-     * Parses a GitHub raw file URL into { owner, repo, ref, path }.
-     * Supports both legacy and `refs/heads/<branch>` formats.
-     */
-    parseFileUrl(fileUrl) {
-        const url = new URL(fileUrl);
-        const segments = url.pathname.split('/').filter(Boolean);
-
-        const owner = segments[0];
-        const repo = segments[1];
-
-        // New format: /owner/repo/refs/heads/<branch>/<path...>
-        if (segments[2] === "refs" && segments[3] === "heads") {
-            return {
-                owner,
-                repo,
-                ref: segments[4],               // actual branch
-                path: segments.slice(5).join('/') // rest of the file path
-            };
-        }
-
-        // Old format: /owner/repo/<branch>/<path...>
-        return {
-            owner,
-            repo,
-            ref: segments[2] || null,
-            path: segments.slice(3).join('/')
-        };
-    }
 
 
 
@@ -71,6 +42,9 @@ export class BaseVcsProvider {
     }
 
     // These methods should be overridden by concrete provider classes.
+    parseFileUrl() {
+        throw new Error("parseFileUrl() must be overridden in a subclass.");
+    }
     getFileRequestUrl() {
         throw new Error("getFileRequest() must be overridden in a subclass.");
     }

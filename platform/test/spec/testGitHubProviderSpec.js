@@ -21,6 +21,30 @@ describe("GitHubProvider", () => {
         });
     });
 
+    describe("parseFileUrl", () => {
+        it("extracts owner, repo, ref, and path from the legacy GitHub raw URL format", () => {
+            const url = "https://raw.githubusercontent.com/owner/repo/branch/folder/file.ext";
+            const result = provider.parseFileUrl(url);
+            expect(result).toEqual({
+                owner: "owner",
+                repo: "repo",
+                ref: "branch",
+                path: "folder/file.ext"
+            });
+        });
+
+        it("extracts owner, repo, ref, and path from the new GitHub raw URL format", () => {
+            const url = "https://raw.githubusercontent.com/owner/repo/refs/heads/branch/folder/file.ext";
+            const result = provider.parseFileUrl(url);
+            expect(result).toEqual({
+                owner: "owner",
+                repo: "repo",
+                ref: "branch",
+                path: "folder/file.ext"
+            });
+        });
+    });
+
     describe("getFileRequestUrl", () => {
         it("constructs file request URL correctly", () => {
             const url = provider.getFileRequestUrl(fileUrl_1);

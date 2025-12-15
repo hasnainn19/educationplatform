@@ -30,29 +30,6 @@ describe("BaseVcsProvider", () => {
         });
     });
 
-    describe("parseFileUrl", () => {
-        it("extracts owner, repo, ref, and path from the legacy GitHub raw URL format", () => {
-            const url = "https://host.com/owner/repo/branch/folder/file.ext";
-            const result = provider.parseFileUrl(url);
-            expect(result).toEqual({
-                owner: "owner",
-                repo: "repo",
-                ref: "branch",
-                path: "folder/file.ext"
-            });
-        });
-
-        it("extracts owner, repo, ref, and path from the new GitHub raw URL format", () => {
-            const url = "https://host.com/owner/repo/refs/heads/branch/folder/file.ext";
-            const result = provider.parseFileUrl(url);
-            expect(result).toEqual({
-                owner: "owner",
-                repo: "repo",
-                ref: "branch",
-                path: "folder/file.ext"
-            });
-        });
-    });
 
     describe("constructRequestUrl", () => {
         it("builds full URL with provider name and route", () => {

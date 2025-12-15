@@ -7,10 +7,40 @@ export class GitHubProvider extends BaseVcsProvider {
         this.supportedHosts = ['raw.githubusercontent.com'];
     }
 
+    /**
+     * Parses a GitHub raw file URL into { owner, repo, ref, path }.
+     * Supports both legacy and `refs/heads/<branch>` formats.
+     */
+    parseFileUrl(fileUrl) {
+        const url = new URL(fileUrl);
+        const segments = url.pathname.split('/').filter(Boolean);
+
+        const owner = segments[0];
+        const repo = segments[1];
+
+        // New format: /owner/repo/refs/heads/<branch>/<path...>
+        if (segments[2] === "refs" && segments[3] === "heads") {
+            return {
+                owner,
+                repo,
+                ref: segments[4],               // actual branch
+                path: segments.slice(5).join('/') // rest of the file path
+            };
+        }
+
+        // Old format: /owner/repo/<branch>/<path...>
+        return {
+            owner,
+            repo,
+            ref: segments[2] || null,
+            path: segments.slice(3).join('/')
+        };
+    }
+
     getFileRequestUrl(fileUrl) {
         let requestUrl = super.constructRequestUrl("file");
 
-        const parts = super.parseFileUrl(fileUrl);
+        const parts = this.parseFileUrl(fileUrl);
         requestUrl = super.addQueryParamsToRequestUrl(requestUrl, parts);   
 
         return requestUrl.href;
@@ -19,7 +49,7 @@ export class GitHubProvider extends BaseVcsProvider {
     getBranchesRequestUrl(activityUrl) {
         let requestUrl = super.constructRequestUrl("branches");
         
-        const parts = super.parseFileUrl(activityUrl);
+        const parts = this.parseFileUrl(activityUrl);
         const params = {
             owner: parts.owner,
             repo: parts.repo,
@@ -33,7 +63,7 @@ export class GitHubProvider extends BaseVcsProvider {
     getCompareBranchesRequestUrl(activityUrl, branchToCompare) {
         let requestUrl = super.constructRequestUrl("compare-branches");
 
-        const parts = super.parseFileUrl(activityUrl);
+        const parts = this.parseFileUrl(activityUrl);
         const params = {
             owner: parts.owner,
             repo: parts.repo,
@@ -46,7 +76,7 @@ export class GitHubProvider extends BaseVcsProvider {
     }
 
     createPullRequestLink(activityUrl, baseBranch, headBranch) {
-        const parts = super.parseFileUrl(activityUrl);
+        const parts = this.parseFileUrl(activityUrl);
 
         const owner = parts.owner;
         const repo = parts.repo;
@@ -58,7 +88,7 @@ export class GitHubProvider extends BaseVcsProvider {
         const requestUrl = super.constructRequestUrl("store").href;
 
         // Parse the URL once for owner, repo, and ref.
-        const parts = super.parseFileUrl(activityUrl);
+        const parts = this.parseFileUrl(activityUrl);
         const payload = {
             owner: parts.owner,
             repo: parts.repo,
@@ -69,7 +99,7 @@ export class GitHubProvider extends BaseVcsProvider {
 
         // Iterate over the files and add their path and content to the payload.
         for (const file of files) {
-            const fileParams = super.parseFileUrl(file.fileUrl);
+            const fileParams = this.parseFileUrl(file.fileUrl);
             payload.files.push({
                 path: fileParams.path,
                 content: file.newFileContent
@@ -82,7 +112,7 @@ export class GitHubProvider extends BaseVcsProvider {
     createBranchRequest(activityUrl, newBranch) {
         const requestUrl = super.constructRequestUrl("create-branch").href;
 
-        const parts = super.parseFileUrl(activityUrl);
+        const parts = this.parseFileUrl(activityUrl);
         const payload = {
             owner: parts.owner,
             repo: parts.repo,
@@ -96,7 +126,7 @@ export class GitHubProvider extends BaseVcsProvider {
     mergeBranchesRequest(activityUrl, branchToMergeFrom, mergeType) {
         const requestUrl = super.constructRequestUrl("merge-branches").href;
 
-        const parts = super.parseFileUrl(activityUrl);
+        const parts = this.parseFileUrl(activityUrl);
         const payload = {
             owner: parts.owner,
             repo: parts.repo,
@@ -109,7 +139,7 @@ export class GitHubProvider extends BaseVcsProvider {
     }
 
     extractFilePathFromRawURL(rawUrl) {
-        const parsedUrl = super.parseFileUrl(rawUrl);
+        const parsedUrl = this.parseFileUrl(rawUrl);
         return parsedUrl.path;
     }
 }
