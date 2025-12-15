@@ -1009,9 +1009,9 @@ describe("EducationPlatformApp", () => {
             saveable1 = panels.saveableDirty;
             saveable2 = panels.programDirty;
 
-            // Force getFilePath to return matching strings for the mocked response
-            saveable1.getFilePath = () => "file1";
-            saveable2.getFilePath = () => "file2";
+            // Mock getFileUrl to return URLs for the mocked response
+            spyOn(saveable1, "getFileUrl").and.returnValue("https://raw.githubusercontent.com/owner/repo/branch/file1");
+            spyOn(saveable2, "getFileUrl").and.returnValue("https://raw.githubusercontent.com/owner/repo/branch/file2");
 
             // Mock export data
             spyOn(saveable1, "exportSaveData").and.returnValue({ path: "file1", content: "..." });
@@ -1028,7 +1028,12 @@ describe("EducationPlatformApp", () => {
             spyOn(saveable2, "setLastSavedContent");
 
             platform.fileHandler = {
-                storeFiles: jasmine.createSpy("storeFiles")
+                storeFiles: jasmine.createSpy("storeFiles"),
+                getFilePath: jasmine.createSpy("getFilePath").and.callFake((url) => {
+                    if (url.includes("file1")) return "file1";
+                    if (url.includes("file2")) return "file2";
+                    return "unknown";
+                })
             };
             platform.getPanelsWithChanges = () => [saveable1, saveable2];
         });
@@ -1579,6 +1584,10 @@ describe("EducationPlatformApp", () => {
                             content: "newContent"
                         }
                     ]
+                }),
+                getFilePath: jasmine.createSpy("getFilePath").and.callFake((url) => {
+                    if (url.includes("panel1")) return "panel1.txt";
+                    return "unknown.txt";
                 })
             };
 

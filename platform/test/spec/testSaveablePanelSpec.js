@@ -101,22 +101,6 @@ describe("SaveablePanel", () => {
         });
     });
 
-    describe("getFilePath", () => {
-        it("parses GitHub path correctly", () => {
-            panel.setFileUrl("https://raw.githubusercontent.com/owner/repo/branch/path/to/file");
-            expect(panel.getFilePath()).toBe("path/to/file");
-        });
-
-        it("returns empty string for invalid URL", () => {
-            panel.setFileUrl("not-a-url");
-            expect(panel.getFilePath()).toBe("");
-        });
-
-        it("throws if fileUrl is undefined", () => {
-            panel.setFileUrl(undefined);
-            expect(() => panel.getFilePath()).toThrow();
-        });
-    });
 
     describe("getValueSha / setValueSha", () => {
         it("sets and gets valueSha", () => {

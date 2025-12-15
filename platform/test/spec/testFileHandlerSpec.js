@@ -59,6 +59,12 @@ function createDummyProvider(tokenHandlerUrl) {
                     message
                 }
             };
+        }),
+
+        extractFilePathFromRawURL: jasmine.createSpy().and.callFake((rawUrl) => {
+            // Simple mock: extract everything after the last '/'
+            const parts = rawUrl.split('/');
+            return parts.slice(4).join('/'); // dummy implementation for testing
         })
     };
 }
@@ -308,6 +314,17 @@ describe("FileHandler", () => {
             utility.jsonRequest.and.returnValue(Promise.reject({ message: "store error" }));
 
             await expectAsync(fileHandler.storeFiles(url, files, message, overrideBranch)).toBeRejectedWith({ message: "store error" });
+        });
+    });
+
+    describe("getFilePath", () => {
+        it("should return the extracted file path", () => {
+            const url = "http://dummy.com/owner/repo/branch/path/to/file";
+            
+            const result = fileHandler.getFilePath(url);
+            
+            expect(dummyProvider.extractFilePathFromRawURL).toHaveBeenCalledWith(url);
+            expect(result).toBe("repo/branch/path/to/file"); // based on dummy implementation
         });
     });
 });

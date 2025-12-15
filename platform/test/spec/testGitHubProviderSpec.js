@@ -110,4 +110,36 @@ describe("GitHubProvider", () => {
             expect(result.payload.mergeType).toBe("fast-forward");
         });
     });
+
+    describe("extractFilePathFromRawURL", () => {
+        it("extracts file path from legacy GitHub URL format", () => {
+            const legacyUrl = "https://raw.githubusercontent.com/owner/repo/branch/path/to/file.txt";
+            const result = provider.extractFilePathFromRawURL(legacyUrl);
+            expect(result).toBe("path/to/file.txt");
+        });
+
+        it("extracts file path from new GitHub URL format with refs/heads", () => {
+            const newUrl = "https://raw.githubusercontent.com/owner/repo/refs/heads/branch/path/to/file.txt";
+            const result = provider.extractFilePathFromRawURL(newUrl);
+            expect(result).toBe("path/to/file.txt");
+        });
+
+        it("extracts file path from nested directory structure", () => {
+            const nestedUrl = "https://raw.githubusercontent.com/owner/repo/main/src/components/Button.js";
+            const result = provider.extractFilePathFromRawURL(nestedUrl);
+            expect(result).toBe("src/components/Button.js");
+        });
+
+        it("extracts file path from root level file", () => {
+            const rootUrl = "https://raw.githubusercontent.com/owner/repo/main/README.md";
+            const result = provider.extractFilePathFromRawURL(rootUrl);
+            expect(result).toBe("README.md");
+        });
+
+        it("extracts empty string for URL with no file path", () => {
+            const emptyPathUrl = "https://raw.githubusercontent.com/owner/repo/main/";
+            const result = provider.extractFilePathFromRawURL(emptyPathUrl);
+            expect(result).toBe("");
+        });
+    });
 });
