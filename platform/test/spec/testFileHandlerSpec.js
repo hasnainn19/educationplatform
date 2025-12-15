@@ -10,15 +10,11 @@ function createDummyProvider(tokenHandlerUrl) {
         tokenHandlerUrl,
         supportedHosts: ["dummy.com"],
 
-        parseFileUrl: jasmine.createSpy().and.callFake((fileUrl) => {
-            // Simple mock: parse dummy URL format
-            const parts = fileUrl.split('/').filter(Boolean);
-            return {
-                owner: parts[1] || "dummy",
-                repo: parts[2] || "dummy", 
-                ref: parts[3] || "main",
-                path: parts.slice(4).join('/')
-            };
+        parseFileUrl: jasmine.createSpy().and.returnValue({
+            owner: "dummy-owner",
+            repo: "dummy-repo", 
+            ref: "dummy-branch",
+            path: "dummy/file/path"
         }),
 
         createBranchRequest: jasmine.createSpy().and.callFake((url, newBranch) => {
@@ -72,11 +68,9 @@ function createDummyProvider(tokenHandlerUrl) {
             };
         }),
 
-        extractFilePathFromRawURL: jasmine.createSpy().and.callFake((rawUrl) => {
-            // Simple mock: extract everything after the last '/'
-            const parts = rawUrl.split('/');
-            return parts.slice(4).join('/'); // dummy implementation for testing
-        }),
+        extractFilePathFromRawURL: jasmine.createSpy().and.returnValue("test/file/path"),
+
+        extractBranchFromActivityURL: jasmine.createSpy().and.returnValue("test-branch"),
     };
 }
 
@@ -329,13 +323,24 @@ describe("FileHandler", () => {
     });
 
     describe("getFilePath", () => {
-        it("should return the extracted file path", () => {
+        it("should return the file path", () => {
             const url = "http://dummy.com/owner/repo/branch/path/to/file";
             
             const result = fileHandler.getFilePath(url);
             
             expect(dummyProvider.extractFilePathFromRawURL).toHaveBeenCalledWith(url);
-            expect(result).toBe("repo/branch/path/to/file"); // based on dummy implementation
+            expect(result).toBe("test/file/path");
+        });
+    });
+
+    describe("getCurrentBranch", () => {
+        it("should return the current branch", () => {
+            const url = "http://dummy.com/owner/repo/branch/path/to/file";
+            
+            const result = fileHandler.getCurrentBranch(url);
+            
+            expect(dummyProvider.extractBranchFromActivityURL).toHaveBeenCalledWith(url);
+            expect(result).toBe("test-branch");
         });
     });
 });

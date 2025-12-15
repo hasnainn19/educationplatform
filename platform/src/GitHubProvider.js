@@ -9,7 +9,25 @@ export class GitHubProvider extends BaseVcsProvider {
 
     /**
      * Parses a GitHub raw file URL into { owner, repo, ref, path }.
-     * Supports both legacy and `refs/heads/<branch>` formats.
+     *
+     * GitHub currently supports two raw URL formats:
+     *
+     * 1. Legacy format:
+     *    https://raw.githubusercontent.com/<owner>/<repo>/<branch>/<path>
+     *    Example:
+     *    https://raw.githubusercontent.com/user/repo/main/src/App.js
+     *    Returns: { owner: "user", repo: "repo", ref: "main", path: "src/App.js" }
+     *
+     * 2. New "namespaced refs" format:
+     *    https://raw.githubusercontent.com/<owner>/<repo>/refs/heads/<branch>/<path>
+     *    Example:
+     *    https://raw.githubusercontent.com/org/repo/refs/heads/feature-branch/src/Component.js
+     *    Returns: { owner: "org", repo: "repo", ref: "feature-branch", path: "src/Component.js" }
+     *
+     * This function detects which pattern is present and extracts the components accordingly.
+     *
+     * @param {String} fileUrl - The GitHub raw file URL to parse
+     * @returns {Object} Object containing { owner, repo, ref, path } or null values if not found
      */
     parseFileUrl(fileUrl) {
         const url = new URL(fileUrl);
@@ -141,5 +159,10 @@ export class GitHubProvider extends BaseVcsProvider {
     extractFilePathFromRawURL(rawUrl) {
         const parsedUrl = this.parseFileUrl(rawUrl);
         return parsedUrl.path;
+    }
+
+    extractBranchFromActivityURL(activityUrl) {
+        const parsedUrl = this.parseFileUrl(activityUrl);
+        return parsedUrl.ref;
     }
 }

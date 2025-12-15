@@ -210,7 +210,7 @@ class EducationPlatformApp {
             document.getElementById('review-changes').classList.remove('hidden');
 
             this.activityURL = utility.getActivityURL();
-            this.currentBranch = utility.getCurrentBranch();
+            this.currentBranch = this.fileHandler.getCurrentBranch(this.activityURL);
 
             this.fetchAndStoreUserInfo();
         }

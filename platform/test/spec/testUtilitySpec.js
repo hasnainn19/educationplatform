@@ -7,7 +7,6 @@ import {
     getRequest,
     urlParamPrivateRepo,
     getActivityURL,
-    getCurrentBranch,
     validateBranchName,
     setAuthenticated,
     isAuthenticated,
@@ -133,34 +132,6 @@ describe("Utility", () => {
         });
     });
 
-    describe("getCurrentBranch", () => {
-        it("extracts branch from the legacy GitHub raw URL format", () => {
-            const mockContext = {
-                getActivityURL: () => "https://raw.githubusercontent.com/org/repo/main/path/file.json"
-            };
-
-            const result = getCurrentBranch.call(mockContext);
-            expect(result).toBe("main");
-        });
-
-        it("extracts branch from the new GitHub refs/heads URL format", () => {
-            const mockContext = {
-                getActivityURL: () => "https://raw.githubusercontent.com/org/repo/refs/heads/feature-branch/path/file.json"
-            };
-
-            const result = getCurrentBranch.call(mockContext);
-            expect(result).toBe("feature-branch");
-        });
-
-        it("returns null when no branch can be detected", () => {
-            const mockContext = {
-                getActivityURL: () => "https://raw.githubusercontent.com/org/repo/"
-            };
-
-            const result = getCurrentBranch.call(mockContext);
-            expect(result).toBeNull();
-        });
-    });
 
     describe("validateBranchName", () => {
         it("returns true for valid branch names", () => {

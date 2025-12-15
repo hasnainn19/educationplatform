@@ -166,4 +166,30 @@ describe("GitHubProvider", () => {
             expect(result).toBe("");
         });
     });
+
+    describe("extractBranchFromActivityURL", () => {
+        it("extracts branch from the legacy GitHub raw URL format", () => {
+            const legacyUrl = "https://raw.githubusercontent.com/org/repo/main/path/file.json";
+            const result = provider.extractBranchFromActivityURL(legacyUrl);
+            expect(result).toBe("main");
+        });
+
+        it("extracts branch from the new GitHub refs/heads URL format", () => {
+            const newUrl = "https://raw.githubusercontent.com/org/repo/refs/heads/feature-branch/path/file.json";
+            const result = provider.extractBranchFromActivityURL(newUrl);
+            expect(result).toBe("feature-branch");
+        });
+
+        it("returns null when no branch can be detected", () => {
+            const invalidUrl = "https://raw.githubusercontent.com/org/repo/";
+            const result = provider.extractBranchFromActivityURL(invalidUrl);
+            expect(result).toBeNull();
+        });
+
+        it("handles URLs with minimal path components", () => {
+            const minimalUrl = "https://raw.githubusercontent.com/owner/repo/develop";
+            const result = provider.extractBranchFromActivityURL(minimalUrl);
+            expect(result).toBe("develop");
+        });
+    });
 });

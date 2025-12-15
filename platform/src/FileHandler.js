@@ -246,6 +246,16 @@ export class FileHandler {
         const provider = this.findProvider(fileUrl);
         return provider.extractFilePathFromRawURL(fileUrl);
     }
+
+    /**
+     * Extract the current branch from an activity URL
+     * @param {String} activityUrl - The activity URL
+     * @returns {String} The extracted branch name
+     */
+    getCurrentBranch(activityUrl) {
+        const provider = this.findProvider(activityUrl);
+        return provider.extractBranchFromActivityURL(activityUrl);
+    }
     
     static {
         utility.authenticatedDecorator(FileHandler.prototype, 'fetchBranches');

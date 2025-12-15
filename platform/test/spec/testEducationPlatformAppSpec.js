@@ -311,7 +311,10 @@ describe("EducationPlatformApp", () => {
             spyOn(platform, "fetchAndStoreUserInfo").and.resolveTo();
             spyOn(utility, "setAuthenticated");
             spyOn(utility, "getActivityURL").and.returnValue("https://activity.example.com");
-            spyOn(utility, "getCurrentBranch").and.returnValue("main");
+            
+            platform.fileHandler = {
+                getCurrentBranch: jasmine.createSpy().and.returnValue("main")
+            };
         });
 
         afterEach(() => {

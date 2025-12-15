@@ -147,39 +147,6 @@ export function getActivityURL(location = window.location) {
     return params.get("activities") || null;
 }
 
-/**
- * Extracts the Git branch name from a GitHub raw content URL.
- *
- * GitHub currently supports two raw URL formats:
- *
- * 1. Legacy format:
- *    https://raw.githubusercontent.com/<owner>/<repo>/<branch>/<path>
- *    Example:
- *    https://raw.githubusercontent.com/user/repo/main/file.json
- *
- * 2. New "namespaced refs" format:
- *    https://raw.githubusercontent.com/<owner>/<repo>/refs/heads/<branch>/<path>
- *    Example:
- *    https://raw.githubusercontent.com/org/repo/refs/heads/feature-branch/file.json
- *
- * This function detects which pattern is present and returns the correct branch name.
- *
- * @returns {String|null} The branch name, or null if the URL does not match a supported pattern.
- */
-export function getCurrentBranch() {
-    const url = new URL(this.getActivityURL());
-    const segments = url.pathname.split('/').filter(Boolean);
-
-    // New format: /owner/repo/refs/heads/<branch>/<path...>
-    if (segments[2] === "refs" && segments[3] === "heads") {
-        return segments[4] || null;
-    }
-
-    // Old format: /owner/repo/<branch>/<path...>
-    return segments[2] || null;
-}
-
-
 
 /**
      * Validates a branch name:
@@ -334,7 +301,6 @@ export const utility = {
     jsonRequestConversion,
     getRequest,
     urlParamPrivateRepo,
-    getCurrentBranch,
     validateBranchName,
     getActivityURL,
     setAuthenticated,

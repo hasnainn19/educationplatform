@@ -69,4 +69,7 @@ export class BaseVcsProvider {
     extractFilePathFromRawURL() {
         throw new Error("extractFilePathFromRawURL() must be overridden in a subclass.");
     }
+    extractBranchFromActivityURL() {
+        throw new Error("extractBranchFromActivityURL() must be overridden in a subclass.");
+    }
 }
