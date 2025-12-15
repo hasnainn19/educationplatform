@@ -68,13 +68,6 @@ class SaveablePanel extends Panel {
         this.fileUrl = url;
     }
 
-    /**
-     * FIXME: Currently only supports GitHub URLs.
-     */
-    getFilePath() {
-        return this.getFileUrl().split("/").slice(6).join("/");
-    }
-
     getValueSha() {
         return this.valueSha;
     }

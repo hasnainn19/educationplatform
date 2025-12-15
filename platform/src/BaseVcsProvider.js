@@ -92,4 +92,7 @@ export class BaseVcsProvider {
     mergeBranchesRequest() {
         throw new Error("mergeBranchesRequest() must be overridden in a subclass.");
     }
+    extractFilePathFromRawURL() {
+        throw new Error("extractFilePathFromRawURL() must be overridden in a subclass.");
+    }
 }

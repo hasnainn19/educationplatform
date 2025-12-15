@@ -236,6 +236,16 @@ export class FileHandler {
             throw error;
         }
     }
+
+    /**
+     * Extract the file path from a VCS raw URL
+     * @param {String} fileUrl - The file raw URL
+     * @returns {String} The extracted file path
+     */
+    getFilePath(fileUrl) {
+        const provider = this.findProvider(fileUrl);
+        return provider.extractFilePathFromRawURL(fileUrl);
+    }
     
     static {
         utility.authenticatedDecorator(FileHandler.prototype, 'fetchBranches');

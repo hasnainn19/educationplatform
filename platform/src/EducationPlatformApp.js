@@ -949,7 +949,7 @@ class EducationPlatformApp {
                         let dataReturned = JSON.parse(response);
 
                         for (const panel of panelsToSave) {
-                            const filePath = panel.getFilePath();
+                            const filePath = this.fileHandler.getFilePath(panel.getFileUrl());
 
                             // Find the updated file that matches the panel's file path
                             const updatedFile = dataReturned.files.find(file => file.path === filePath);
@@ -1401,7 +1401,7 @@ class EducationPlatformApp {
                     const updatedFiles = response.files;
 
                     for (const panel of this.saveablePanels) {
-                        const filePath = panel.getFilePath();
+                        const filePath = this.fileHandler.getFilePath(panel.getFileUrl());
                         const match = updatedFiles.find(file => file.path === filePath);
 
                         panel.setValueSha(match.sha);

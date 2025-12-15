@@ -107,4 +107,9 @@ export class GitHubProvider extends BaseVcsProvider {
 
         return { url: requestUrl, payload: payload };
     }
+
+    extractFilePathFromRawURL(rawUrl) {
+        const parsedUrl = super.parseFileUrl(rawUrl);
+        return parsedUrl.path;
+    }
 }
