@@ -498,7 +498,7 @@ describe("EducationPlatformApp", () => {
             panels = createVariousPanels();
 
             platform.fileHandler = {
-                fetchFile: jasmine.createSpy("fetchFile")
+                fetchFileFromRepository: jasmine.createSpy("fetchFileFromRepository")
             };
 
             // Set up mock file URLs and SHAs for dirty panels
@@ -515,23 +515,23 @@ describe("EducationPlatformApp", () => {
         });
 
         it("returns true if at least one panel has a different remote SHA", async () => {
-            platform.fileHandler.fetchFile.withArgs("file1", false).and.resolveTo({ sha: "remoteShaDifferent" });
-            platform.fileHandler.fetchFile.withArgs("file2", false).and.resolveTo({ sha: "localSha2" });
+            platform.fileHandler.fetchFileFromRepository.withArgs("file1", false).and.resolveTo({ sha: "remoteShaDifferent" });
+            platform.fileHandler.fetchFileFromRepository.withArgs("file2", false).and.resolveTo({ sha: "localSha2" });
 
             const result = await platform.isLocalEnvironmentOutdated();
             expect(result).toBeTrue();
         });
 
         it("returns false if all remote SHAs match local SHAs", async () => {
-            platform.fileHandler.fetchFile.withArgs("file1", false).and.resolveTo({ sha: "localSha1" });
-            platform.fileHandler.fetchFile.withArgs("file2", false).and.resolveTo({ sha: "localSha2" });
+            platform.fileHandler.fetchFileFromRepository.withArgs("file1", false).and.resolveTo({ sha: "localSha1" });
+            platform.fileHandler.fetchFileFromRepository.withArgs("file2", false).and.resolveTo({ sha: "localSha2" });
 
             const result = await platform.isLocalEnvironmentOutdated();
             expect(result).toBeFalse();
         });
 
-        it("throws an error if fetchFile returns null", async () => {
-            platform.fileHandler.fetchFile.withArgs("file1", false).and.resolveTo(null);
+        it("throws an error if fetchFileFromRepository returns null", async () => {
+            platform.fileHandler.fetchFileFromRepository.withArgs("file1", false).and.resolveTo(null);
 
             platform.saveablePanels = [panels.saveableDirty];
             platform.getPanelsWithChanges = () => platform.saveablePanels;
@@ -539,8 +539,8 @@ describe("EducationPlatformApp", () => {
             await expectAsync(platform.isLocalEnvironmentOutdated()).toBeRejectedWithError(/No remote file found/);
         });
 
-        it("throws an error if fetchFile returns undefined", async () => {
-            platform.fileHandler.fetchFile.withArgs("file1", false).and.resolveTo(undefined);
+        it("throws an error if fetchFileFromRepository returns undefined", async () => {
+            platform.fileHandler.fetchFileFromRepository.withArgs("file1", false).and.resolveTo(undefined);
 
             platform.saveablePanels = [panels.saveableDirty];
             platform.getPanelsWithChanges = () => platform.saveablePanels;

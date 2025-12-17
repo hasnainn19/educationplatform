@@ -859,7 +859,7 @@ class EducationPlatformApp {
         const panelsToSave = this.getPanelsWithChanges();
         for (const panel of panelsToSave) {
 
-            const remoteFile = await this.fileHandler.fetchFile(panel.getFileUrl(), utility.urlParamPrivateRepo());
+            const remoteFile = await this.fileHandler.fetchFileFromRepository(panel.getFileUrl(), utility.urlParamPrivateRepo());
             if (!remoteFile) {
                 throw new Error(`No remote file found for ${panel.getTitle()}`);
             }

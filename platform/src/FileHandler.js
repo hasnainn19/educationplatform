@@ -14,6 +14,16 @@ export class FileHandler {
     }
 
     /**
+     * Checks if a URL is supported by any of the available VCS providers.
+     * @param {String} url - The URL to check
+     * @returns {boolean} True if the URL host is supported by a VCS provider, false otherwise
+     */
+    isSupportedHost(url) {
+        const parsedUrl = new URL(url);
+        return this.providers.some(provider => provider.supportedHosts.includes(parsedUrl.host));
+    }
+
+    /**
      * Chooses the correct VCS provider based on the URL of the file.
      * @param url
      * @returns a VCS provider object that supports the URL, or null if none found.
@@ -29,9 +39,30 @@ export class FileHandler {
     }
 
     /**
+     * TODO: Remove this function and use the refactored one below
+     * 
+     * Fetch file directly via HTTP without using VCS providers.
+     * Used for tool-generated content and other non-repository URLs.
+     * @param {String} url - The direct URL to fetch
+     * @returns {Object|null} Object with content, or null if failed
+     */
+    fetchFileDirectly(url) {
+        let xhr = new XMLHttpRequest();
+        xhr.open("GET", url, false);
+        xhr.send();
+
+        if (xhr.status === 200) {
+            return { content: xhr.responseText };
+        } 
+        else {
+            return null;
+        }
+    }
+
+    /**
      * TODO: Remove this function and use the one below - this makes it async, so we need to also go back and update the callers.
      */
-    fetchFile(url, isPrivate){
+    fetchFileFromRepository(url, isPrivate){
 
         if (isPrivate){
             // Private so request via token server
@@ -62,29 +93,22 @@ export class FileHandler {
         
         // At this point, this is either a public repository, or it's a private repository but an unknown type of URL.
         // In either case, we assume that we can simply access the URL directly.
-        let xhr = new XMLHttpRequest();
-        xhr.open("GET", url, false);
-        xhr.send();
-        
-        if (xhr.status === 200) {    
-            return { content: xhr.responseText, sha: null }; //TODO need to retrieve the sha for the file IF it's from a public repository
-
-        } 
-        else {
-            return null;
+        let response = this.fetchFileDirectly(url);
+        if (response != null) {
+            return { content: response.content, sha: null }; // TODO need to retrieve the sha for the file
         }
     }
 
     /**
      * TODO: Use this instead of the above - this makes it async, so we need to also go back and update the callers.
-     * Rename this to fetchFile and remove the above function.
+     * Rename this to fetchFileFromRepository and remove the above function.
      * 
      * Fetch file contents from a public or private repository.
      * @param {String} url - The file URL.
      * @param {boolean} isPrivate - Whether the file is from a private repository.
      * @returns {Promise<{content: string, sha: string|null} | null>}
      */
-    async refactoredFetchFile(url, isPrivate) {
+    async refactoredFetchFileFromRepository(url, isPrivate) {
         try {
             if (isPrivate) {
                 const provider = this.findProvider(url);
@@ -101,12 +125,35 @@ export class FileHandler {
 
             // At this point, this is either a public repository, or it's a private repository but an unknown type of URL.
             // In either case, we assume that we can simply access the URL directly.
-            const responseText = await utility.getRequest(url, false);
-            return { content: responseText, sha: null };
+            const response = await this.refactoredFetchFileDirectly(url);
+            if (response != null) {
+                return { content: response.content, sha: null }; // TODO need to retrieve the sha for the file
+            }
+            return null;
 
         } 
         catch (error) {
             console.error("Failed to fetch file:", error);
+            return null;
+        }
+    }
+
+    /**
+     * TODO: Use this instead of the above
+     * Rename this to fetchFileDirectly and remove the above function.
+     * 
+     * Fetch file directly via HTTP without using VCS providers (async version).
+     * Used for tool-generated content and other non-repository URLs.
+     * @param {String} url - The direct URL to fetch
+     * @returns {Promise<{content: string} | null>} Promise resolving to object with content, or null if failed
+     */
+    async refactoredFetchFileDirectly(url) {
+        try {
+            const responseText = await utility.getRequest(url, false);
+            return { content: responseText };
+        } 
+        catch (error) {
+            console.error("Failed to fetch file directly:", error);
             return null;
         }
     }

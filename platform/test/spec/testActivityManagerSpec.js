@@ -99,7 +99,7 @@ describe("ActivityManager", () => {
             refPanelDef = () => {};
 
             spyOn(ActivityManager.prototype, "resolveActionReferences").and.callThrough();
-            spyOn(FileHandler.prototype, "fetchFile").and.returnValue({ content: activityFile });
+            spyOn(FileHandler.prototype, "fetchFileFromRepository").and.returnValue({ content: activityFile });
             spyOn(ActivityConfigValidator.prototype, "validateConfigFile").and.returnValue([]);
             spyOn(ActivityManager.prototype, "appendTopLevelActivityMenuItem"); // Uses document.getElementById
 
@@ -109,7 +109,7 @@ describe("ActivityManager", () => {
         });
 
         it("causes the activity file to be fetched from its URL using the fileHandler", () => {
-            expect(FileHandler.prototype.fetchFile).toHaveBeenCalledWith(ACTIVITY_URL, false);
+            expect(FileHandler.prototype.fetchFileFromRepository).toHaveBeenCalledWith(ACTIVITY_URL, false);
         });
 
         it("resolves references for a valid activity by  calling resolveActionReferences with activity id", ()=> {
@@ -182,7 +182,7 @@ describe("ActivityManager", () => {
             fileh = new FileHandler("test://th.url"); 
             refPanelDef = () => panelDef;
 
-            spyOn(FileHandler.prototype, "fetchFile").and.returnValue({ content: activityFile });
+            spyOn(FileHandler.prototype, "fetchFileFromRepository").and.returnValue({ content: activityFile });
             spyOn(ActivityConfigValidator.prototype, "validateConfigFile").and.returnValue([]);
             spyOn(ActivityManager.prototype, "appendTopLevelActivityMenuItem"); // Uses document.getElementById
             spyOn(ActivityManager.prototype, "fetchFile").and.returnValue({ content: "Test Content", sha: "a123" });

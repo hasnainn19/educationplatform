@@ -127,7 +127,7 @@ class ActivityManager {
         let fileContent
 
         try {
-            let file = this.fileHandler.fetchFile( this.activitiesUrl , urlParamPrivateRepo() );
+            let file = this.fileHandler.fetchFileFromRepository( this.activitiesUrl , urlParamPrivateRepo() );
             fileContent = file.content;
         } catch (err) {
             console.error(err);
@@ -426,14 +426,27 @@ class ActivityManager {
     }
 
     /**
-     * Fetches the content of a file under the activities folder
+     * Fetches the content of a file - either from repository or directly from tools
      * This could be an Epsilon program, a Flexmi model or an Emfatic metamodel
      */
     fetchFile(name) {
 
-        let fileUrl = new URL(name, this.activitiesUrl).href 
+        // Convert relative paths to full URLs using activity base, preserve full URLs as-is
+        let fileUrl = new URL(name, this.activitiesUrl).href;
 
-        return this.fileHandler.fetchFile( fileUrl, urlParamPrivateRepo() );
+        // Route to appropriate fetch method based on final URL
+        try {
+            if (this.fileHandler.isSupportedHost(fileUrl)) {
+                return this.fileHandler.fetchFileFromRepository(fileUrl, urlParamPrivateRepo());
+            }
+            else {
+                return this.fileHandler.fetchFileDirectly(fileUrl);
+            }
+        }
+        catch (error) {
+            console.error("Invalid URL: " + fileUrl);
+            return null;
+        }
     }
 
 
