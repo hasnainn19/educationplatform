@@ -14,9 +14,6 @@ export class BaseVcsProvider {
         this.tokenHandlerUrl = tokenHandlerUrl;
     }
 
-
-
-
     /**
      * Construct a complete request URL from a route.
      * @param {String} route - The specific route for the request.
@@ -39,6 +36,28 @@ export class BaseVcsProvider {
             requestUrl.searchParams.append(key, params[key]);
         }
         return requestUrl;
+    }
+
+    /**
+     * Extracts the file path from a VCS raw URL.
+     * Uses the provider-specific parseFileUrl() implementation to handle different URL formats.
+     * @param {String} rawUrl - The raw file URL from the VCS provider.
+     * @returns {String} The file path
+     */
+    extractFilePathFromRawURL(rawUrl) {
+        const parsedUrl = this.parseFileUrl(rawUrl);
+        return parsedUrl.path;
+    }
+
+    /**
+     * Extracts the branch name from an activity URL.
+     * Uses the provider-specific parseFileUrl() implementation to handle different URL formats.
+     * @param {String} activityUrl - The raw activity URL
+     * @returns {String} The branch name
+     */
+    extractBranchFromActivityURL(activityUrl) {
+        const parsedUrl = this.parseFileUrl(activityUrl);
+        return parsedUrl.ref;
     }
 
     // These methods should be overridden by concrete provider classes.
@@ -65,11 +84,5 @@ export class BaseVcsProvider {
     }
     mergeBranchesRequest() {
         throw new Error("mergeBranchesRequest() must be overridden in a subclass.");
-    }
-    extractFilePathFromRawURL() {
-        throw new Error("extractFilePathFromRawURL() must be overridden in a subclass.");
-    }
-    extractBranchFromActivityURL() {
-        throw new Error("extractBranchFromActivityURL() must be overridden in a subclass.");
     }
 }
