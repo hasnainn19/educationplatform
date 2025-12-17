@@ -133,7 +133,7 @@ export class FileHandler {
 
         } 
         catch (error) {
-            console.error("Failed to fetch file:", error);
+            console.error("Failed to fetch file with url: " + url, error);
             return null;
         }
     }
@@ -153,7 +153,7 @@ export class FileHandler {
             return { content: responseText };
         } 
         catch (error) {
-            console.error("Failed to fetch file directly:", error);
+            console.error("Failed to fetch file with url: " + url, error);
             return null;
         }
     }
