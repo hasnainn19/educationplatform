@@ -515,37 +515,37 @@ describe("EducationPlatformApp", () => {
         });
 
         it("returns true if at least one panel has a different remote SHA", async () => {
-            platform.fileHandler.fetchFileFromRepository.withArgs("file1", false).and.resolveTo({ sha: "remoteShaDifferent" });
-            platform.fileHandler.fetchFileFromRepository.withArgs("file2", false).and.resolveTo({ sha: "localSha2" });
+            platform.fileHandler.fetchFileFromRepository.withArgs("file1").and.returnValue({ sha: "remoteShaDifferent" });
+            platform.fileHandler.fetchFileFromRepository.withArgs("file2").and.returnValue({ sha: "localSha2" });
 
-            const result = await platform.isLocalEnvironmentOutdated();
+            const result = platform.isLocalEnvironmentOutdated();
             expect(result).toBeTrue();
         });
 
         it("returns false if all remote SHAs match local SHAs", async () => {
-            platform.fileHandler.fetchFileFromRepository.withArgs("file1", false).and.resolveTo({ sha: "localSha1" });
-            platform.fileHandler.fetchFileFromRepository.withArgs("file2", false).and.resolveTo({ sha: "localSha2" });
+            platform.fileHandler.fetchFileFromRepository.withArgs("file1").and.returnValue({ sha: "localSha1" });
+            platform.fileHandler.fetchFileFromRepository.withArgs("file2").and.returnValue({ sha: "localSha2" });
 
-            const result = await platform.isLocalEnvironmentOutdated();
+            const result = platform.isLocalEnvironmentOutdated();
             expect(result).toBeFalse();
         });
 
         it("throws an error if fetchFileFromRepository returns null", async () => {
-            platform.fileHandler.fetchFileFromRepository.withArgs("file1", false).and.resolveTo(null);
+            platform.fileHandler.fetchFileFromRepository.withArgs("file1").and.returnValue(null);
 
             platform.saveablePanels = [panels.saveableDirty];
             platform.getPanelsWithChanges = () => platform.saveablePanels;
 
-            await expectAsync(platform.isLocalEnvironmentOutdated()).toBeRejectedWithError(/No remote file found/);
+            expect(() => platform.isLocalEnvironmentOutdated()).toThrowError(/No remote file found/);
         });
 
         it("throws an error if fetchFileFromRepository returns undefined", async () => {
-            platform.fileHandler.fetchFileFromRepository.withArgs("file1", false).and.resolveTo(undefined);
+            platform.fileHandler.fetchFileFromRepository.withArgs("file1").and.returnValue(undefined);
 
             platform.saveablePanels = [panels.saveableDirty];
             platform.getPanelsWithChanges = () => platform.saveablePanels;
 
-            await expectAsync(platform.isLocalEnvironmentOutdated()).toBeRejectedWithError(/No remote file found/);
+            expect(() => platform.isLocalEnvironmentOutdated()).toThrowError(/No remote file found/);
         });
     });
 
@@ -936,7 +936,7 @@ describe("EducationPlatformApp", () => {
     describe("savePanelContents()", () => {
         beforeEach(() => {
             spyOn(platform, "changesHaveBeenMade");
-            spyOn(platform, "isLocalEnvironmentOutdated").and.resolveTo(false);
+            spyOn(platform, "isLocalEnvironmentOutdated").and.returnValue(false);
             spyOn(platform, "getCommitMessage").and.returnValue("Commit message");
             spyOn(platform, "saveFiles").and.returnValue(Promise.resolve());
             spyOn(PlaygroundUtility, "warningNotification");
@@ -957,7 +957,7 @@ describe("EducationPlatformApp", () => {
 
         it("shows a warning if environment is outdated", async () => {
             platform.changesHaveBeenMade.and.returnValue(true);
-            platform.isLocalEnvironmentOutdated.and.resolveTo(true);
+            platform.isLocalEnvironmentOutdated.and.returnValue(true);
 
             await platform.savePanelContents();
 

@@ -137,18 +137,21 @@ describe("SaveablePanel", () => {
 
     describe("canSave", () => {
         it("returns false when content matches last saved", () => {
+            panel.setFileUrl("https://raw.githubusercontent.com/user/repo/main/file.txt");
             panel.setLastSavedContent("same");
             editor.setValue("same");
             expect(panel.canSave()).toBe(false);
         });
 
         it("returns true when content has changed", () => {
+            panel.setFileUrl("https://raw.githubusercontent.com/user/repo/main/file.txt");
             panel.setLastSavedContent("original");
             editor.setValue("modified");
             expect(panel.canSave()).toBe(true);
         });
 
         it("handles null saved content", () => {
+            panel.setFileUrl("https://raw.githubusercontent.com/user/repo/main/file.txt");
             panel.setLastSavedContent(null);
             editor.setValue("something");
             expect(panel.canSave()).toBe(true);

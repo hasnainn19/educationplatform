@@ -109,7 +109,7 @@ describe("ActivityManager", () => {
         });
 
         it("causes the activity file to be fetched from its URL using the fileHandler", () => {
-            expect(FileHandler.prototype.fetchFileFromRepository).toHaveBeenCalledWith(ACTIVITY_URL, false);
+            expect(FileHandler.prototype.fetchFileFromRepository).toHaveBeenCalledWith(ACTIVITY_URL);
         });
 
         it("resolves references for a valid activity by  calling resolveActionReferences with activity id", ()=> {

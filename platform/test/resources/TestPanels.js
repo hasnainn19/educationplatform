@@ -44,7 +44,7 @@ export function createSaveablePanel(id, { canSave = false } = {}) {
     panel.initialize(mockEditor(canSave ? "changed" : "original"));
     panel.setLastSavedContent("original");
     panel.getTitle = () => id; // for testing purposes
-    panel.getFileUrl = () => `https://repo.test/files/${id}.txt`;
+    panel.getFileUrl = () => `https://raw.githubusercontent.com/test/repo/main/${id}.txt`;
     return panel;
 }
 
@@ -56,7 +56,7 @@ export function createProgramPanel(id, { canSave = false } = {}) {
     panel.initialize(mockEditor(canSave ? "changed" : "original"));
     panel.setLastSavedContent("original");
     panel.getTitle = () => id; // for testing purposes
-    panel.getFileUrl = () => `https://repo.test/files/${id}.txt`;
+    panel.getFileUrl = () => `https://raw.githubusercontent.com/test/repo/main/${id}.txt`;
     return panel;
 }
 
