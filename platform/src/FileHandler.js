@@ -44,7 +44,7 @@ export class FileHandler {
      * Fetch file directly via HTTP without using VCS providers.
      * Used for tool-generated content and other non-repository URLs.
      * @param {String} url - The direct URL to fetch
-     * @returns {Object|null} Object with content, or null if failed
+     * @returns {{content: string} | null} Object with content, or null if failed
      */
     fetchFileDirectly(url) {
         let xhr = new XMLHttpRequest();

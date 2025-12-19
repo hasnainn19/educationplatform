@@ -861,6 +861,7 @@ class EducationPlatformApp {
 
             const remoteFile = this.fileHandler.fetchFileFromRepository(panel.getFileUrl());
             if (!remoteFile) {
+                PlaygroundUtility.errorNotification(`No remote file found for ${panel.getTitle()}.`);
                 throw new Error(`No remote file found for ${panel.getTitle()}`);
             }
 

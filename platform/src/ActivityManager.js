@@ -126,28 +126,27 @@ class ActivityManager {
         let errors = []; 
         let fileContent
 
-        try {
-            let file = this.fileHandler.fetchFileFromRepository(this.activitiesUrl);
+        let file = this.fileHandler.fetchFileFromRepository(this.activitiesUrl);
+        if (file && file.content) {
             fileContent = file.content;
-        } catch (err) {
-            console.error(err);
-            errors.push( new EducationPlatformError(`The activity configuration file was not accessible at: ${this.activitiesUrl}. 
-                                                    Check the activity file is available at the given url and you have the correct access rights.`) );
+        } 
+        else {
+            errors.push(new EducationPlatformError(`
+                The activity configuration file was not accessible at: ${this.activitiesUrl}. 
+                Check the activity file is available at the given url and you have the correct access rights.
+            `));
         }
 
-        if (fileContent != null){
+        let validatedConfig = this.parseAndValidateActivityConfig(fileContent);
 
-            let validatedConfig = this.parseAndValidateActivityConfig(fileContent);
+        if ( validatedConfig.errors.length == 0 ) {
 
-            if ( validatedConfig.errors.length == 0 ){
+            this.createActivitiesMenu(validatedConfig.config);
 
-                this.createActivitiesMenu(validatedConfig.config);
-
-            } else {
-                // Error config file parsing error
-                errors = errors.concat(validatedConfig.errors);
-            }
-        } 
+        } else {
+            // Error config file parsing error
+            errors = errors.concat(validatedConfig.errors);
+        }
 
         return errors;
     }
@@ -381,6 +380,9 @@ class ActivityManager {
                 if (file) {
                     apanel.file = file.content;
                     apanel.sha = file.sha; 
+                } 
+                else {
+                    this.configErrors.push(new EducationPlatformError(`Could not fetch file: ${panelURLString}`));
                 }
             }
 
@@ -435,17 +437,11 @@ class ActivityManager {
         let fileUrl = new URL(name, this.activitiesUrl).href;
 
         // Route to appropriate fetch method based on final URL
-        try {
-            if (this.fileHandler.isSupportedHost(fileUrl)) {
-                return this.fileHandler.fetchFileFromRepository(fileUrl);
-            }
-            else {
-                return this.fileHandler.fetchFileDirectly(fileUrl);
-            }
+        if (this.fileHandler.isSupportedHost(fileUrl)) {
+            return this.fileHandler.fetchFileFromRepository(fileUrl);
         }
-        catch (error) {
-            console.error("Invalid URL: " + fileUrl);
-            return null;
+        else {
+            return this.fileHandler.fetchFileDirectly(fileUrl);
         }
     }
 
