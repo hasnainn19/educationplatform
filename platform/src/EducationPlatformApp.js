@@ -855,11 +855,11 @@ class EducationPlatformApp {
      * Checks if the changed files in the local environment is outdated compared to the remote repository.
      * @returns {boolean} true if the local environment is outdated, false otherwise.
      */
-    async isLocalEnvironmentOutdated() {
+    isLocalEnvironmentOutdated() {
         const panelsToSave = this.getPanelsWithChanges();
         for (const panel of panelsToSave) {
 
-            const remoteFile = await this.fileHandler.fetchFileFromRepository(panel.getFileUrl(), utility.urlParamPrivateRepo());
+            const remoteFile = this.fileHandler.fetchFileFromRepository(panel.getFileUrl());
             if (!remoteFile) {
                 throw new Error(`No remote file found for ${panel.getTitle()}`);
             }
@@ -903,7 +903,7 @@ class EducationPlatformApp {
             return;
         }
 
-        if (await this.isLocalEnvironmentOutdated()) {
+        if (this.isLocalEnvironmentOutdated()) {
             PlaygroundUtility.warningNotification("The changes made to the panels are outdated - please save your work to a new branch.")
             return;
         }

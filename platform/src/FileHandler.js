@@ -61,41 +61,32 @@ export class FileHandler {
 
     /**
      * TODO: Remove this function and use the one below - this makes it async, so we need to also go back and update the callers.
+     * 
+     * Fetch file contents from a repository via the tokenserver.
+     * @param {String} url - The raw URL of the file in the repository
+     * @returns {{content: string, sha: string} | null} Object containing { content, sha } or null if failed
      */
-    fetchFileFromRepository(url, isPrivate){
+    fetchFileFromRepository(url) {
+        const provider = this.findProvider(url);
+        const requestUrl = provider.getFileRequestUrl(url);
 
-        if (isPrivate){
-            // Private so request via token server
-            const provider = this.findProvider(url);
-            const requestUrl = provider.getFileRequestUrl(url);
+        let xhr = new XMLHttpRequest();
 
-            if (requestUrl != null) {
-                let xhr = new XMLHttpRequest();
-                xhr.open("GET", requestUrl, false);
-                xhr.setRequestHeader("Accept", "application/json; charset=UTF-8");
-                xhr.withCredentials = true;
-                xhr.send();
-                
-                if (xhr.status === 200) {  
-                    
-                    let response = JSON.parse(xhr.responseText);
+        xhr.open("GET", requestUrl, false);
+        xhr.setRequestHeader("Accept", "application/json; charset=UTF-8");
+        xhr.withCredentials = true; // Always send authentication cookies if present
 
-                    let contents = new TextDecoder().decode(utility.base64ToBytes(response.data.content));
-
-                    return { content: contents, sha: response.data.sha };
-                
-                } 
-                else {
-                    return null;
-                }
-            }
-        }
+        xhr.send();
         
-        // At this point, this is either a public repository, or it's a private repository but an unknown type of URL.
-        // In either case, we assume that we can simply access the URL directly.
-        let response = this.fetchFileDirectly(url);
-        if (response != null) {
-            return { content: response.content, sha: null }; // TODO need to retrieve the sha for the file
+        if (xhr.status === 200) {  
+            let response = JSON.parse(xhr.responseText);
+            let contents = new TextDecoder().decode(utility.base64ToBytes(response.data.content));
+            
+            return { content: contents, sha: response.data.sha };
+        
+        } 
+        else {
+            return null;
         }
     }
 
@@ -103,34 +94,20 @@ export class FileHandler {
      * TODO: Use this instead of the above - this makes it async, so we need to also go back and update the callers.
      * Rename this to fetchFileFromRepository and remove the above function.
      * 
-     * Fetch file contents from a public or private repository.
-     * @param {String} url - The file URL.
-     * @param {boolean} isPrivate - Whether the file is from a private repository.
-     * @returns {Promise<{content: string, sha: string|null} | null>}
+     * Fetch file contents from a repository via the tokenserver.
+     * @param {String} url - The raw URL of the file in the repository
+     * @returns {Promise<{content: string, sha: string} | null>} - Promise resolving to Object with content and sha, or null if failed
      */
-    async refactoredFetchFileFromRepository(url, isPrivate) {
+    async refactoredFetchFileFromRepository(url) {
         try {
-            if (isPrivate) {
-                const provider = this.findProvider(url);
-                const requestUrl = provider.getFileRequestUrl(url);
+            const provider = this.findProvider(url);
+            const requestUrl = provider.getFileRequestUrl(url);
 
-                if (requestUrl) {
-                    const responseText = await utility.getRequest(requestUrl, true);
-                    const response = JSON.parse(responseText);
+            const responseText = await utility.getRequest(requestUrl, true);
+            const response = JSON.parse(responseText);
 
-                    const contents = new TextDecoder().decode(utility.base64ToBytes(response.data.content));
-                    return { content: contents, sha: response.data.sha };
-                }
-            }
-
-            // At this point, this is either a public repository, or it's a private repository but an unknown type of URL.
-            // In either case, we assume that we can simply access the URL directly.
-            const response = await this.refactoredFetchFileDirectly(url);
-            if (response != null) {
-                return { content: response.content, sha: null }; // TODO need to retrieve the sha for the file
-            }
-            return null;
-
+            const contents = new TextDecoder().decode(utility.base64ToBytes(response.data.content));
+            return { content: contents, sha: response.data.sha };
         } 
         catch (error) {
             console.error("Failed to fetch file with url: " + url, error);

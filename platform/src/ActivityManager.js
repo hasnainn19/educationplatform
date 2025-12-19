@@ -127,7 +127,7 @@ class ActivityManager {
         let fileContent
 
         try {
-            let file = this.fileHandler.fetchFileFromRepository( this.activitiesUrl , urlParamPrivateRepo() );
+            let file = this.fileHandler.fetchFileFromRepository(this.activitiesUrl);
             fileContent = file.content;
         } catch (err) {
             console.error(err);
@@ -437,7 +437,7 @@ class ActivityManager {
         // Route to appropriate fetch method based on final URL
         try {
             if (this.fileHandler.isSupportedHost(fileUrl)) {
-                return this.fileHandler.fetchFileFromRepository(fileUrl, urlParamPrivateRepo());
+                return this.fileHandler.fetchFileFromRepository(fileUrl);
             }
             else {
                 return this.fileHandler.fetchFileDirectly(fileUrl);
