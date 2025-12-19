@@ -34,7 +34,7 @@ class SaveablePanel extends Panel {
      */
     updatePanelDiff() {
 
-        const currentValue = this.getValue() ?? "";
+        const currentValue = super.getValue() ?? "";
         const lastSavedValue = this.getLastSavedContent() ?? "";
 
         if (currentValue === lastSavedValue) {
@@ -102,6 +102,11 @@ class SaveablePanel extends Panel {
      * @returns {boolean} true if the content has changed since the last save
      */
     canSave() {
+        // Exclude panels that are from outside the repository
+        if (!this.getFileUrl().includes("raw.githubusercontent.com")) {
+            return false;
+        }
+
         return super.getValue() !== this.getLastSavedContent();
     }
 
@@ -112,7 +117,7 @@ class SaveablePanel extends Panel {
     exportSaveData() {
         return {
             fileUrl: this.getFileUrl(),
-            newFileContent: this.getValue()
+            newFileContent: super.getValue()
         };
     }
 
