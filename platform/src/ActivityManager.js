@@ -124,28 +124,27 @@ class ActivityManager {
      */
     fetchActivities() {
         let errors = []; 
-        let fileContent
 
         let file = this.fileHandler.fetchFileFromRepository(this.activitiesUrl);
         if (file && file.content) {
-            fileContent = file.content;
+            const fileContent = file.content;
+
+            let validatedConfig = this.parseAndValidateActivityConfig(fileContent);
+
+            if ( validatedConfig.errors.length == 0 ) {
+
+                this.createActivitiesMenu(validatedConfig.config);
+
+            } else {
+                // Error config file parsing error
+                errors = errors.concat(validatedConfig.errors);
+            }
         } 
         else {
             errors.push(new EducationPlatformError(`
                 The activity configuration file was not accessible at: ${this.activitiesUrl}. 
                 Check the activity file is available at the given url and you have the correct access rights.
             `));
-        }
-
-        let validatedConfig = this.parseAndValidateActivityConfig(fileContent);
-
-        if ( validatedConfig.errors.length == 0 ) {
-
-            this.createActivitiesMenu(validatedConfig.config);
-
-        } else {
-            // Error config file parsing error
-            errors = errors.concat(validatedConfig.errors);
         }
 
         return errors;
